@@ -9,6 +9,7 @@ export function LoginForm() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") ?? "/";
   const initialError = params.get("error");
+  const activated = params.get("activated") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +32,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {activated && (
+        <div className="text-sm text-green-400 bg-green-950/30 border border-green-900 rounded px-3 py-2">
+          Compte activé. Vous pouvez maintenant vous connecter.
+        </div>
+      )}
       <div>
         <label className="block text-sm mb-1 text-slate-300">Email</label>
         <input

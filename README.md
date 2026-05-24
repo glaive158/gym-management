@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gym Management SaaS
 
-## Getting Started
+Multi-tenant SaaS for gym chain management. Next.js 14 + PostgreSQL + Prisma + NextAuth.
 
-First, run the development server:
+## Setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Create databases:
+   ```bash
+   createdb gym_management
+   createdb gym_management_test
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Configure env:
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local — generate NEXTAUTH_SECRET with: openssl rand -base64 32
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run migrations:
+   ```bash
+   npm run db:migrate
+   DATABASE_URL="postgresql://admin@localhost:5432/gym_management_test?schema=public" npx prisma migrate deploy
+   ```
 
-## Learn More
+5. Seed PLATFORM_OWNER:
+   ```bash
+   npm run db:seed
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+6. Run dev server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Default credentials
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+After seeding:
+- Email: `owner@platform.local`
+- Password: `ChangeMe123!`
 
-## Deploy on Vercel
+Change the password after first login.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Commands
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` — dev server
+- `npm run build` — production build
+- `npm test` — run tests
+- `npm run typecheck` — type-check
+- `npm run db:migrate` — create/apply migration
+- `npm run db:seed` — seed PLATFORM_OWNER
+- `npm run db:reset` — drop + recreate dev DB
+
+## Architecture
+
+See `docs/superpowers/specs/2026-05-24-gym-management-design.md`.
+
+## Roles
+
+- `PLATFORM_OWNER` — manages tenants, no tenant scope
+- `TENANT_ADMIN` — manages one organization's gyms
+- `MANAGER` — manages one gym
+- `MEMBER` — gym member
+
+## Tenant isolation
+
+All queries from non-PLATFORM_OWNER contexts go through `tenantPrisma(prisma, tenantId)` in `src/lib/prisma-tenant.ts`. Never use the raw `prisma` import for tenant-scoped data.

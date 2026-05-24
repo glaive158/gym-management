@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
         });
         if (!user) return null;
         if (user.status !== UserStatus.ACTIVE) return null;
+        if (!user.passwordHash) return null;
 
         const ok = await verifyPassword(credentials.password, user.passwordHash);
         if (!ok) return null;

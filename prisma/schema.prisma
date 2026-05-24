@@ -62,26 +62,30 @@ model Tenant {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  name          String
-  email         String     @unique
-  phone         String?
-  passwordHash  String
-  avatar        String?
-  role          Role
-  status        UserStatus @default(ACTIVE)
-  tenantId      String?
-  gymId         String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id                       String     @id @default(cuid())
+  name                     String
+  email                    String     @unique
+  phone                    String?
+  passwordHash             String?
+  avatar                   String?
+  role                     Role
+  status                   UserStatus @default(ACTIVE)
+  tenantId                 String?
+  gymId                    String?
+  activationToken          String?    @unique
+  activationTokenExpiresAt DateTime?
+  passwordSetAt            DateTime?
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
 
-  tenant        Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  gym           Gym?       @relation(fields: [gymId], references: [id], onDelete: SetNull)
-  validatedTenants Tenant[] @relation("TenantValidator")
+  tenant                   Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  gym                      Gym?       @relation(fields: [gymId], references: [id], onDelete: SetNull)
+  validatedTenants         Tenant[]   @relation("TenantValidator")
 
   @@index([tenantId])
   @@index([gymId])
   @@index([role])
+  @@index([activationToken])
 }
 
 model Gym {

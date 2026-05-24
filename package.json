@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "dotenv -e .env.local -- vitest run",
+    "test:watch": "dotenv -e .env.local -- vitest",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
+    "db:reset": "dotenv -e .env.local -- prisma migrate reset"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

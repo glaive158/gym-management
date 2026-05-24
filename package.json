@@ -17,11 +17,13 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
+    "file-type": "^22.0.1",
     "next": "14.2.35",
     "next-auth": "^4.24.14",
     "react": "^18",
     "react-dom": "^18",
     "resend": "^6.12.3",
+    "sharp": "^0.34.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

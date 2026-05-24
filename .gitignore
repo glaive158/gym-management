@@ -39,3 +39,7 @@ next-env.d.ts
 .superpowers/
 
 /src/generated/prisma
+
+# user uploads (local MVP storage)
+/public/uploads/*
+!/public/uploads/.gitkeep

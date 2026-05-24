@@ -7,6 +7,8 @@ export function AdminNav() {
       <div className="flex items-center gap-6">
         <Link href="/admin" className="font-semibold text-slate-100">Admin</Link>
         <Link href="/admin" className="text-sm text-slate-400 hover:text-slate-200">Dashboard</Link>
+        <Link href="/admin/gyms" className="text-sm text-slate-400 hover:text-slate-200">Salles</Link>
+        <Link href="/admin/managers" className="text-sm text-slate-400 hover:text-slate-200">Gérants</Link>
       </div>
       <SignOutButton />
     </nav>

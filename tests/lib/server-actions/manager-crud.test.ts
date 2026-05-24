@@ -3,6 +3,8 @@ import { testPrisma, resetDb } from "../../helpers/db";
 import { createManager, listManagers, deactivateManager } from "@/lib/server-actions/manager-crud";
 import { Role, TenantStatus, UserStatus } from "@prisma/client";
 
+afterAll(async () => { await testPrisma.$disconnect(); });
+
 async function seedTenantAndGym() {
   const t = await testPrisma.tenant.create({
     data: { name: "F", slug: "f", ownerEmail: "a@x.com", ownerPhone: "1", city: "Dakar", status: TenantStatus.ACTIVE },
@@ -15,7 +17,6 @@ async function seedTenantAndGym() {
 
 describe("createManager", () => {
   beforeEach(async () => { await resetDb(); });
-  afterAll(async () => { await testPrisma.$disconnect(); });
 
   it("creates a PENDING manager with activation token", async () => {
     const { t, g } = await seedTenantAndGym();
@@ -37,8 +38,8 @@ describe("createManager", () => {
 
   it("rejects duplicate email", async () => {
     const { t, g } = await seedTenantAndGym();
-    await createManager({ tenantId: t.id, gymId: g.id, name: "A", email: "x@x.com", phone: "1", prisma: testPrisma });
-    const r = await createManager({ tenantId: t.id, gymId: g.id, name: "B", email: "x@x.com", phone: "1", prisma: testPrisma });
+    await createManager({ tenantId: t.id, gymId: g.id, name: "A", email: "x@x.com", phone: "+221770000000", prisma: testPrisma });
+    const r = await createManager({ tenantId: t.id, gymId: g.id, name: "B", email: "x@x.com", phone: "+221770000000", prisma: testPrisma });
     expect(r.success).toBe(false);
   });
 
@@ -49,7 +50,7 @@ describe("createManager", () => {
     });
     const r = await createManager({
       tenantId: t2.id, gymId: g.id,
-      name: "M", email: "m@x.com", phone: "1", prisma: testPrisma,
+      name: "M", email: "m@x.com", phone: "+221770000000", prisma: testPrisma,
     });
     expect(r.success).toBe(false);
   });
@@ -57,12 +58,11 @@ describe("createManager", () => {
 
 describe("listManagers", () => {
   beforeEach(async () => { await resetDb(); });
-  afterAll(async () => { await testPrisma.$disconnect(); });
 
   it("returns managers of a tenant only", async () => {
     const { t, g } = await seedTenantAndGym();
-    await createManager({ tenantId: t.id, gymId: g.id, name: "A", email: "a@x.com", phone: "1", prisma: testPrisma });
-    await createManager({ tenantId: t.id, gymId: g.id, name: "B", email: "b@x.com", phone: "1", prisma: testPrisma });
+    await createManager({ tenantId: t.id, gymId: g.id, name: "A", email: "ma@x.com", phone: "+221770000001", prisma: testPrisma });
+    await createManager({ tenantId: t.id, gymId: g.id, name: "B", email: "mb@x.com", phone: "+221770000002", prisma: testPrisma });
     const list = await listManagers({ tenantId: t.id, prisma: testPrisma });
     expect(list).toHaveLength(2);
     expect(list.every(m => m.role === Role.MANAGER)).toBe(true);
@@ -71,11 +71,10 @@ describe("listManagers", () => {
 
 describe("deactivateManager", () => {
   beforeEach(async () => { await resetDb(); });
-  afterAll(async () => { await testPrisma.$disconnect(); });
 
   it("flips manager status to SUSPENDED", async () => {
     const { t, g } = await seedTenantAndGym();
-    const c = await createManager({ tenantId: t.id, gymId: g.id, name: "A", email: "a@x.com", phone: "1", prisma: testPrisma });
+    const c = await createManager({ tenantId: t.id, gymId: g.id, name: "A", email: "a@x.com", phone: "+221770000000", prisma: testPrisma });
     const r = await deactivateManager({ tenantId: t.id, managerId: c.userId!, prisma: testPrisma });
     expect(r.success).toBe(true);
     const u = await testPrisma.user.findUniqueOrThrow({ where: { id: c.userId! } });

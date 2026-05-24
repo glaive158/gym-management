@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLATFORM_OWNER
+  TENANT_ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum BillingStatus {
+  TRIAL
+  ACTIVE
+  OVERDUE
+  SUSPENDED
+}
+
+model Tenant {
+  id                    String        @id @default(cuid())
+  name                  String
+  slug                  String        @unique
+  ownerEmail            String
+  ownerPhone            String
+  city                  String
+  status                TenantStatus  @default(PENDING)
+  isBeta                Boolean       @default(false)
+  trialEndsAt           DateTime?
+  monthlyPricePerGym    Int           @default(25000)
+  billingStatus         BillingStatus @default(TRIAL)
+  nextBillingDate       DateTime?
+  validatedAt           DateTime?
+  validatedById         String?
+  rejectionReason       String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  users                 User[]
+  gyms                  Gym[]
+  validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
+
+  @@index([status])
+  @@index([slug])
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  phone         String?
+  passwordHash  String
+  avatar        String?
+  role          Role
+  status        UserStatus @default(ACTIVE)
+  tenantId      String?
+  gymId         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  tenant        Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  gym           Gym?       @relation(fields: [gymId], references: [id], onDelete: SetNull)
+  validatedTenants Tenant[] @relation("TenantValidator")
+
+  @@index([tenantId])
+  @@index([gymId])
+  @@index([role])
+}
+
+model Gym {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  address     String
+  city        String
+  phone       String
+  logo        String?
+  latitude    Float
+  longitude   Float
+  qrToken     String   @unique @default(cuid())
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users       User[]
+
+  @@index([tenantId])
+  @@index([qrToken])
+}

@@ -32,31 +32,39 @@ Plateforme SaaS moderne permettant à des propriétaires de salles de sport au S
 4. Si validé → email au propriétaire avec lien activation → accès dashboard tenant
 5. Première étape : créer sa première salle + ses formules d'abonnement
 
-### Facturation
-- **Beta** : gratuit pour tous tenants validés
-- Modèle de facturation reporté après beta (flag `billing_plan = null` pendant beta)
-- Spec billing à faire dans phase 2
+### Facturation SaaS
+- **Modèle** : 25 000 FCFA / mois / salle (tenant paye la plateforme)
+- **Beta** : gratuit pendant période beta (flag `is_beta = true` sur tenant)
+- **Cycle** : facturation mensuelle, prélevée le 1er du mois
+- **Moyens de paiement** : Wave, Orange Money, PayDunya (le tenant paye la plateforme)
+- **Période d'essai** : 14 jours gratuits après validation par PLATFORM_OWNER
+- **Suspension auto** : si impayé après 7 jours de grâce → tenant suspendu (lecture seule, plus de check-in possible)
+- **Réactivation** : paiement de l'arriéré → réactivation auto
+- **Factures** : génération PDF auto chaque mois, envoyée par email + dispo dans dashboard tenant
+- **PLATFORM_OWNER** : voit tous les paiements SaaS, peut ajuster prix, accorder réductions/promos
 
 ## Scope MVP
 
 ### Inclus
 - Multi-tenant SaaS avec isolation totale
 - Onboarding hybride avec validation PLATFORM_OWNER
-- Dashboard PLATFORM_OWNER (validation tenants, vue globale, suspension)
-- Dashboard TENANT_ADMIN (multi-salles d'une organisation)
+- **Facturation SaaS 25k F/mois/salle** (Wave/OM/PayDunya, suspension auto si impayé)
+- Dashboard PLATFORM_OWNER (validation tenants, vue globale, suspension, billing)
+- Dashboard TENANT_ADMIN (multi-salles, factures SaaS, paiement abonnement plateforme)
 - Dashboard MANAGER (une salle, temps réel)
-- Espace MEMBER (mobile PWA)
+- Espace MEMBER web (PWA) **+ app React Native Android**
 - Gestion membres, abonnements, formules
-- Paiements en ligne (Wave, Orange Money, PayDunya) + manuel (cash, TPE)
+- Paiements en ligne membre (Wave, Orange Money, PayDunya) + manuel (cash, TPE)
 - Check-in QR avec géoloc + photo anti-fraude
 - Notifications expiration (email + WhatsApp)
 - Rapports par salle et globaux (TENANT_ADMIN)
+- **App mobile React Native (Android) pour membres** — publiée sur Play Store
 
 ### Exclus (hors MVP)
-- Facturation SaaS (phase 2)
+- iOS App Store (phase 2)
+- App React Native manager/tablette (phase 3)
 - Planning cours collectifs
 - Coaching / réservations
-- App mobile native
 - White-label / domaines personnalisés par tenant
 - Suivi physique membres
 
@@ -76,6 +84,8 @@ Plateforme SaaS moderne permettant à des propriétaires de salles de sport au S
 | Email | Resend | Notifications, validation onboarding |
 | WhatsApp | WhatsApp Business API | Alertes expiration (adoption locale forte) |
 | Storage | S3-compatible (MinIO/Backblaze) | Photos membres, logos |
+| Mobile | React Native + Expo + EAS Build | App membre Android, partage logique avec web |
+| Monorepo | Turborepo (web + mobile + shared) | Code partagé : types, API client, validation |
 
 ## Architecture
 
@@ -173,10 +183,31 @@ app.com/checkin?gym={token}       → Page check-in (membre scanne)
 - id, name, slug (unique, pour URLs futures)
 - owner_email, owner_phone, city
 - status : PENDING | ACTIVE | SUSPENDED | REJECTED
-- billing_plan (nullable, beta = null)
+- is_beta (boolean, true = pas facturé)
+- trial_ends_at (timestamp, fin essai 14 jours)
+- monthly_price_per_gym (default 25 000 XOF, modifiable par PLATFORM_OWNER)
+- billing_status : TRIAL | ACTIVE | OVERDUE | SUSPENDED
+- next_billing_date
 - validated_at, validated_by (FK → User PLATFORM_OWNER)
 - rejection_reason (nullable)
 - created_at
+
+**TenantInvoice** (facture SaaS mensuelle)
+- id, tenant_id (FK)
+- period_start, period_end
+- nb_gyms (snapshot du mois)
+- amount_total (= nb_gyms × monthly_price_per_gym)
+- status : PENDING | PAID | OVERDUE | CANCELLED
+- due_date, paid_at
+- pdf_url
+- created_at
+
+**TenantPayment** (paiement SaaS effectué par tenant)
+- id, tenant_id (FK), invoice_id (FK → TenantInvoice)
+- amount, method : WAVE | ORANGE_MONEY | PAYDUNYA
+- external_payment_id
+- status : PENDING | PAID | FAILED
+- paid_at
 
 **User**
 - id, name, email, phone, password_hash, avatar
@@ -296,7 +327,9 @@ Chaque query (sauf PLATFORM_OWNER context) doit automatiquement injecter `WHERE 
 - **Architecture** : Next.js 14 fullstack monorepo
 - **4 rôles** : PLATFORM_OWNER, TENANT_ADMIN, MANAGER, MEMBER
 - **Onboarding** : hybride (sign-up libre + validation PLATFORM_OWNER)
-- **Facturation** : gratuit pendant beta, modèle à définir phase 2
+- **Facturation SaaS** : 25 000 FCFA/mois/salle, essai 14j, suspension auto si impayé
+- **Mobile** : PWA + app React Native Android (Play Store) dans MVP, iOS phase 2
+- **Monorepo** : Turborepo avec partage code web/mobile
 
 ## Risques connus
 
@@ -306,7 +339,26 @@ Chaque query (sauf PLATFORM_OWNER context) doit automatiquement injecter `WHERE 
 - **Précision GPS intérieur** → rayon 100m généreux
 - **Connexion salle** → fallback polling + check-in manuel
 
-## Phases
+## Phases & Roadmap
 
-- **Phase 1 (MVP)** : tout le scope ci-dessus, beta gratuite
-- **Phase 2** : facturation SaaS, white-label optionnel, planning cours
+### Phase 1 — MVP (semaines 1-12)
+- **Semaines 1-2** : Setup monorepo Turborepo, Next.js + Prisma + auth NextAuth, schémas DB
+- **Semaines 3-4** : Multi-tenant core (middleware Prisma, isolation), onboarding tenant, dashboard PLATFORM_OWNER
+- **Semaines 5-6** : Dashboard TENANT_ADMIN (gestion salles, managers), Dashboard MANAGER (membres, formules)
+- **Semaines 7-8** : Paiements membres (adapters Wave/OM/PayDunya), PWA membre, page check-in QR
+- **Semaines 9-10** : Dashboard temps réel (Pusher), anti-fraude (géoloc + photo), notifications
+- **Semaines 11-12** : Facturation SaaS (génération factures, prélèvement, suspension auto), rapports
+
+### Phase 2 — App mobile Android (semaines 13-16)
+- React Native + Expo setup dans monorepo
+- App membre : login, scan QR, profil, abonnement, paiement, notifications push
+- Tests sur appareils Android réels
+- Soumission Play Store (compte développeur 25$)
+
+### Phase 3 — Extensions (post-MVP)
+- iOS App Store
+- App React Native MANAGER (tablette dashboard salle)
+- Planning cours collectifs + réservations
+- Coaching personnel
+- White-label / domaines personnalisés
+- Suivi physique membre (poids, mensurations, photos progression)

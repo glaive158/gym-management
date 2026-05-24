@@ -34,6 +34,13 @@ enum BillingStatus {
   SUSPENDED
 }
 
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
 model Tenant {
   id                    String        @id @default(cuid())
   name                  String
@@ -55,6 +62,8 @@ model Tenant {
 
   users                 User[]
   gyms                  Gym[]
+  plans                 Plan[]
+  subscriptions         Subscription[]
   validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
 
   @@index([status])
@@ -81,6 +90,7 @@ model User {
   tenant                   Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   gym                      Gym?       @relation(fields: [gymId], references: [id], onDelete: SetNull)
   validatedTenants         Tenant[]   @relation("TenantValidator")
+  subscriptions            Subscription[] @relation("MemberSubscriptions")
 
   @@index([tenantId])
   @@index([gymId])
@@ -105,7 +115,49 @@ model Gym {
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users       User[]
+  plans       Plan[]
 
   @@index([tenantId])
   @@index([qrToken])
+}
+
+model Plan {
+  id             String    @id @default(cuid())
+  tenantId       String
+  gymId          String
+  name           String
+  durationDays   Int
+  price          Int
+  currency       String    @default("XOF")
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  gym            Gym       @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  subscriptions  Subscription[]
+
+  @@index([tenantId])
+  @@index([gymId])
+}
+
+model Subscription {
+  id          String              @id @default(cuid())
+  tenantId    String
+  memberId    String
+  planId      String
+  startDate   DateTime
+  endDate     DateTime
+  status      SubscriptionStatus  @default(PENDING)
+  autoRenew   Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  member      User                @relation("MemberSubscriptions", fields: [memberId], references: [id], onDelete: Cascade)
+  plan        Plan                @relation(fields: [planId], references: [id])
+
+  @@index([tenantId])
+  @@index([memberId])
+  @@index([endDate, status])
 }

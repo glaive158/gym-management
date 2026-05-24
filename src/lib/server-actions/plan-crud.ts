@@ -34,7 +34,7 @@ export async function createPlan(input: CreatePlanInput): Promise<{ success: boo
   if (!gym) return { success: false, error: "Salle introuvable dans cette organisation" };
 
   const plan = await scoped.plan.create({
-    data: { gymId: input.gymId, ...parsed.data },
+    data: { gymId: input.gymId, ...parsed.data } as any,
   });
   return { success: true, planId: plan.id };
 }

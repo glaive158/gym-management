@@ -30,7 +30,7 @@ export async function createGym(input: CreateGymInput): Promise<{ success: boole
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
   const client = tenantPrisma(input.prisma, input.tenantId);
-  const gym = await client.gym.create({ data: parsed.data });
+  const gym = await client.gym.create({ data: parsed.data as any });
   return { success: true, gymId: gym.id };
 }
 

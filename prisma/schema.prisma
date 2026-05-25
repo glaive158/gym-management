@@ -49,6 +49,14 @@ enum PaymentMethod {
   TPE
 }
 
+enum CheckInStatus {
+  VALID
+  EXPIRED
+  GEO_REJECTED
+  DUPLICATE
+  NO_SUBSCRIPTION
+}
+
 model Tenant {
   id                    String        @id @default(cuid())
   name                  String
@@ -73,6 +81,7 @@ model Tenant {
   plans                 Plan[]
   subscriptions         Subscription[]
   payments              Payment[]
+  checkIns              CheckIn[]
   validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
 
   @@index([status])
@@ -101,6 +110,7 @@ model User {
   validatedTenants         Tenant[]   @relation("TenantValidator")
   subscriptions            Subscription[] @relation("MemberSubscriptions")
   payments                 Payment[]  @relation("MemberPayments")
+  checkIns                 CheckIn[]  @relation("MemberCheckIns")
 
   @@index([tenantId])
   @@index([gymId])
@@ -127,6 +137,7 @@ model Gym {
   users       User[]
   plans       Plan[]
   payments    Payment[]
+  checkIns    CheckIn[]
 
   @@index([tenantId])
   @@index([qrToken])
@@ -168,6 +179,7 @@ model Subscription {
   member      User                @relation("MemberSubscriptions", fields: [memberId], references: [id], onDelete: Cascade)
   plan        Plan                @relation(fields: [planId], references: [id])
   payments    Payment[]
+  checkIns    CheckIn[]
 
   @@index([tenantId])
   @@index([memberId])
@@ -198,4 +210,27 @@ model Payment {
   @@index([gymId, paidAt])
   @@index([memberId, paidAt])
   @@index([subscriptionId])
+}
+
+model CheckIn {
+  id             String         @id @default(cuid())
+  tenantId       String
+  gymId          String
+  memberId       String
+  subscriptionId String?
+  status         CheckInStatus
+  latitude       Float?
+  longitude      Float?
+  distanceMeters Int?
+  source         String         @default("QR")
+  createdAt      DateTime       @default(now())
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  gym          Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  member       User          @relation("MemberCheckIns", fields: [memberId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([gymId, createdAt])
+  @@index([memberId, createdAt])
 }

@@ -3,7 +3,7 @@ import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { tenantPrisma } from "@/lib/prisma-tenant";
 import { getMonthlyPaymentTotal } from "@/lib/server-actions/payment-crud";
-import { SubscriptionStatus, Role } from "@prisma/client";
+import { SubscriptionStatus, Role, CheckInStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,9 @@ export default async function ManagerDashboard() {
   if (!gym) redirect("/login");
 
   const now = new Date();
-  const [memberCount, activeSubs, plans, monthlyTotal] = await Promise.all([
+  const startToday = new Date();
+  startToday.setHours(0, 0, 0, 0);
+  const [memberCount, activeSubs, plans, monthlyTotal, todayPresence] = await Promise.all([
     scoped.user.count({ where: { role: Role.MEMBER } }),
     scoped.subscription.count({ where: { status: SubscriptionStatus.ACTIVE } }),
     scoped.plan.count({ where: { gymId: ctx.gymId, isActive: true } }),
@@ -26,6 +28,9 @@ export default async function ManagerDashboard() {
       year: now.getFullYear(),
       month: now.getMonth() + 1,
       prisma,
+    }),
+    scoped.checkIn.count({
+      where: { gymId: ctx.gymId, status: CheckInStatus.VALID, createdAt: { gte: startToday } },
     }),
   ]);
 
@@ -37,7 +42,11 @@ export default async function ManagerDashboard() {
         <h1 className="text-2xl font-semibold">{gym.name}</h1>
         <p className="text-sm text-slate-400">{gym.address}, {gym.city}</p>
       </div>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+        <div className="bg-slate-900 border border-slate-800 rounded p-4">
+          <div className="text-xs text-slate-400 uppercase">Présences aujourd&apos;hui</div>
+          <div className="text-3xl font-bold text-cyan-400 mt-1">{todayPresence}</div>
+        </div>
         <div className="bg-slate-900 border border-slate-800 rounded p-4">
           <div className="text-xs text-slate-400 uppercase">Membres</div>
           <div className="text-3xl font-bold text-slate-100 mt-1">{memberCount}</div>
@@ -60,7 +69,7 @@ export default async function ManagerDashboard() {
         </div>
       </div>
       <div className="text-sm text-slate-400">
-        Le dashboard temps réel des check-ins arrive dans le plan suivant.
+        Voir les check-ins en direct dans l&apos;onglet « Check-ins live ».
       </div>
     </div>
   );

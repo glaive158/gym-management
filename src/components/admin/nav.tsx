@@ -10,6 +10,7 @@ export function AdminNav() {
         <Link href="/admin/gyms" className="text-sm text-slate-400 hover:text-slate-200">Salles</Link>
         <Link href="/admin/managers" className="text-sm text-slate-400 hover:text-slate-200">Gérants</Link>
         <Link href="/admin/billing" className="text-sm text-slate-400 hover:text-slate-200">Facturation</Link>
+        <Link href="/admin/reports" className="text-sm text-slate-400 hover:text-slate-200">Rapports</Link>
       </div>
       <SignOutButton />
     </nav>

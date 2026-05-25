@@ -187,6 +187,7 @@ model Payment {
   notes          String?
   paidAt         DateTime      @default(now())
   createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   gym            Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
@@ -194,7 +195,7 @@ model Payment {
   subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
-  @@index([gymId])
-  @@index([memberId])
+  @@index([gymId, paidAt])
+  @@index([memberId, paidAt])
   @@index([subscriptionId])
 }

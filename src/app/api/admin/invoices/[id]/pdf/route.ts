@@ -9,7 +9,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const inv = await prisma.tenantInvoice.findUnique({ where: { id: params.id }, include: { tenant: true } });
   if (!inv || inv.tenantId !== ctx.tenantId) return new Response("Not found", { status: 404 });
   const buf = await buildInvoicePdf(inv);
-  return new Response(buf, {
+  return new Response(new Uint8Array(buf), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="facture-${inv.id}.pdf"`,

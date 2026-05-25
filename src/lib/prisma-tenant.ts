@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-const TENANT_SCOPED_MODELS = new Set(["Gym", "User", "Plan", "Subscription"]);
+const TENANT_SCOPED_MODELS = new Set(["Gym", "User", "Plan", "Subscription", "Payment"]);
 
 export function tenantPrisma(base: PrismaClient, tenantId: string) {
   return base.$extends({

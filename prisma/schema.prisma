@@ -41,6 +41,14 @@ enum SubscriptionStatus {
   CANCELLED
 }
 
+enum PaymentMethod {
+  WAVE
+  ORANGE_MONEY
+  PAYDUNYA
+  CASH
+  TPE
+}
+
 model Tenant {
   id                    String        @id @default(cuid())
   name                  String
@@ -64,6 +72,7 @@ model Tenant {
   gyms                  Gym[]
   plans                 Plan[]
   subscriptions         Subscription[]
+  payments              Payment[]
   validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
 
   @@index([status])
@@ -91,6 +100,7 @@ model User {
   gym                      Gym?       @relation(fields: [gymId], references: [id], onDelete: SetNull)
   validatedTenants         Tenant[]   @relation("TenantValidator")
   subscriptions            Subscription[] @relation("MemberSubscriptions")
+  payments                 Payment[]  @relation("MemberPayments")
 
   @@index([tenantId])
   @@index([gymId])
@@ -116,6 +126,7 @@ model Gym {
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users       User[]
   plans       Plan[]
+  payments    Payment[]
 
   @@index([tenantId])
   @@index([qrToken])
@@ -156,8 +167,34 @@ model Subscription {
   tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   member      User                @relation("MemberSubscriptions", fields: [memberId], references: [id], onDelete: Cascade)
   plan        Plan                @relation(fields: [planId], references: [id])
+  payments    Payment[]
 
   @@index([tenantId])
   @@index([memberId])
   @@index([endDate, status])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  tenantId       String
+  gymId          String
+  memberId       String
+  subscriptionId String
+  amount         Int
+  currency       String        @default("XOF")
+  method         PaymentMethod
+  reference      String?
+  notes          String?
+  paidAt         DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  gym            Gym           @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  member         User          @relation("MemberPayments", fields: [memberId], references: [id], onDelete: Cascade)
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([gymId])
+  @@index([memberId])
+  @@index([subscriptionId])
 }

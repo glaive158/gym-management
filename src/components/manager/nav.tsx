@@ -9,6 +9,7 @@ export function ManagerNav() {
         <Link href="/manager" className="text-sm text-slate-400 hover:text-slate-200">Dashboard</Link>
         <Link href="/manager/members" className="text-sm text-slate-400 hover:text-slate-200">Membres</Link>
         <Link href="/manager/plans" className="text-sm text-slate-400 hover:text-slate-200">Formules</Link>
+        <Link href="/manager/payments" className="text-sm text-slate-400 hover:text-slate-200">Paiements</Link>
       </div>
       <SignOutButton />
     </nav>

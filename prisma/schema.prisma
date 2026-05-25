@@ -57,6 +57,20 @@ enum CheckInStatus {
   NO_SUBSCRIPTION
 }
 
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum TenantPaymentMethod {
+  WAVE
+  ORANGE_MONEY
+  PAYDUNYA
+  MANUAL_TRANSFER
+}
+
 model Tenant {
   id                    String        @id @default(cuid())
   name                  String
@@ -82,6 +96,8 @@ model Tenant {
   subscriptions         Subscription[]
   payments              Payment[]
   checkIns              CheckIn[]
+  invoices              TenantInvoice[]
+  tenantPayments        TenantPayment[]
   validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
 
   @@index([status])
@@ -111,6 +127,7 @@ model User {
   subscriptions            Subscription[] @relation("MemberSubscriptions")
   payments                 Payment[]  @relation("MemberPayments")
   checkIns                 CheckIn[]  @relation("MemberCheckIns")
+  recordedTenantPayments   TenantPayment[] @relation("TenantPaymentRecorder")
 
   @@index([tenantId])
   @@index([gymId])
@@ -233,4 +250,44 @@ model CheckIn {
   @@index([tenantId])
   @@index([gymId, createdAt])
   @@index([memberId, createdAt])
+}
+
+model TenantInvoice {
+  id              String        @id @default(cuid())
+  tenantId        String
+  periodStart     DateTime
+  periodEnd       DateTime
+  nbGyms          Int
+  unitPriceXof    Int
+  totalXof        Int
+  status          InvoiceStatus @default(PENDING)
+  dueDate         DateTime
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments TenantPayment[]
+
+  @@unique([tenantId, periodStart])
+  @@index([status, dueDate])
+}
+
+model TenantPayment {
+  id              String              @id @default(cuid())
+  tenantId        String
+  invoiceId       String
+  amountXof       Int
+  method          TenantPaymentMethod
+  externalRef     String?
+  recordedById    String?
+  paidAt          DateTime            @default(now())
+  createdAt       DateTime            @default(now())
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice    TenantInvoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  recordedBy User?          @relation("TenantPaymentRecorder", fields: [recordedById], references: [id])
+
+  @@index([tenantId])
+  @@index([invoiceId])
 }

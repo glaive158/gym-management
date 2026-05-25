@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { createPayment } from "@/lib/server-actions/payment-crud";
-import { PaymentMethod } from "@prisma/client";
+import { PaymentMethod, Role } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || !ctx.gymId) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!ctx || ctx.role !== Role.MANAGER || !ctx.tenantId || !ctx.gymId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => null);

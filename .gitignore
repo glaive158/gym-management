@@ -43,3 +43,6 @@ next-env.d.ts
 # user uploads (local MVP storage)
 /public/uploads/*
 !/public/uploads/.gitkeep
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/

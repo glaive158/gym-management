@@ -8,6 +8,7 @@ export function PlatformNav() {
         <Link href="/platform" className="font-semibold text-slate-100">Platform</Link>
         <Link href="/platform" className="text-sm text-slate-400 hover:text-slate-200">Dashboard</Link>
         <Link href="/platform/tenants" className="text-sm text-slate-400 hover:text-slate-200">Tenants</Link>
+        <Link href="/platform/invoices" className="text-sm text-slate-400 hover:text-slate-200">Factures</Link>
       </div>
       <SignOutButton />
     </nav>

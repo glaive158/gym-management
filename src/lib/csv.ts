@@ -1,6 +1,6 @@
-export function toCsv<T extends Record<string, unknown>>(rows: T[], columns: (keyof T)[]): string {
-  const header = columns.join(",");
-  const lines = rows.map((row) => columns.map((c) => escape(row[c])).join(","));
+export function toCsv<T extends object>(rows: T[], columns: (keyof T)[]): string {
+  const header = (columns as string[]).join(",");
+  const lines = rows.map((row) => columns.map((c) => escape((row as Record<string, unknown>)[c as string])).join(","));
   return [header, ...lines].join("\n");
 }
 

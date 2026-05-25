@@ -25,7 +25,7 @@ export async function createPayment(
 ): Promise<CreatePaymentResult> {
   const scoped = tenantPrisma(input.prisma, input.tenantId);
 
-  if (input.amount <= 0) {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
     return { success: false, error: "Le montant doit être positif" };
   }
 

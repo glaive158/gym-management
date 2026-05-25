@@ -84,6 +84,16 @@ describe("createPayment", () => {
     expect(r.success).toBe(false);
   });
 
+  it("rejects NaN amount", async () => {
+    const { t, g, memberId, subscriptionId } = await seedFull();
+    const r = await createPayment({
+      tenantId: t.id, gymId: g.id, memberId, subscriptionId,
+      amount: Number("abc"), method: PaymentMethod.CASH, prisma: testPrisma,
+    });
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/montant/i);
+  });
+
   it("rejects subscription not belonging to member", async () => {
     const { t, g, memberId, planId } = await seedFull();
     const m2 = await createMember({

@@ -6,6 +6,7 @@ if (!testUrl) throw new Error("DATABASE_URL_TEST not set");
 export const testPrisma = new PrismaClient({ datasources: { db: { url: testUrl } } });
 
 export async function resetDb(): Promise<void> {
+  await testPrisma.checkIn.deleteMany();
   await testPrisma.payment.deleteMany();
   await testPrisma.subscription.deleteMany();
   await testPrisma.plan.deleteMany();

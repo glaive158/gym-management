@@ -71,6 +71,17 @@ enum TenantPaymentMethod {
   MANUAL_TRANSFER
 }
 
+enum NotificationType {
+  EXPIRATION_J7
+  EXPIRATION_J3
+  EXPIRATION_J0
+}
+
+enum NotificationChannel {
+  EMAIL
+  WHATSAPP
+}
+
 model Tenant {
   id                    String        @id @default(cuid())
   name                  String
@@ -98,6 +109,7 @@ model Tenant {
   checkIns              CheckIn[]
   invoices              TenantInvoice[]
   tenantPayments        TenantPayment[]
+  notifications         NotificationLog[]
   validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
 
   @@index([status])
@@ -128,6 +140,7 @@ model User {
   payments                 Payment[]  @relation("MemberPayments")
   checkIns                 CheckIn[]  @relation("MemberCheckIns")
   recordedTenantPayments   TenantPayment[] @relation("TenantPaymentRecorder")
+  notifications            NotificationLog[] @relation("MemberNotifications")
 
   @@index([tenantId])
   @@index([gymId])
@@ -197,6 +210,7 @@ model Subscription {
   plan        Plan                @relation(fields: [planId], references: [id])
   payments    Payment[]
   checkIns    CheckIn[]
+  notifications NotificationLog[]
 
   @@index([tenantId])
   @@index([memberId])
@@ -290,4 +304,24 @@ model TenantPayment {
 
   @@index([tenantId])
   @@index([invoiceId])
+}
+
+model NotificationLog {
+  id             String              @id @default(cuid())
+  tenantId       String
+  memberId       String
+  subscriptionId String
+  type           NotificationType
+  channel        NotificationChannel
+  sentAt         DateTime            @default(now())
+  success        Boolean             @default(true)
+  errorMessage   String?
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  member       User         @relation("MemberNotifications", fields: [memberId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, type, channel])
+  @@index([tenantId])
+  @@index([memberId])
 }

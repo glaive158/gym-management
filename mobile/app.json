@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gym Management",
     "slug": "gym-management",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,14 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.gymmanagement.app",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -25,16 +32,31 @@
     "plugins": [
       "expo-secure-store",
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
         "expo-camera",
-        { "cameraPermission": "Autoriser l'accès à la caméra pour scanner le QR code." }
+        {
+          "cameraPermission": "Autoriser l'accès à la caméra pour scanner le QR code."
+        }
       ],
       [
         "expo-location",
-        { "locationAlwaysAndWhenInUsePermission": "Position requise pour valider le check-in à l'entrée." }
+        {
+          "locationAlwaysAndWhenInUsePermission": "Position requise pour valider le check-in à l'entrée."
+        }
       ]
     ],
     "extra": {
-      "apiBaseUrl": "http://10.0.2.2:3000"
+      "apiBaseUrl": "http://192.168.1.229:3000",
+      "eas": {
+        "projectId": "2100647f-5326-498b-952c-5309585bc7af"
+      }
     }
   }
 }

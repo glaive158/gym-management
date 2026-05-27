@@ -80,7 +80,8 @@ export function ScanScreen() {
       result.status === "EXPIRED" ? "Abonnement expiré" :
       result.status === "NO_SUBSCRIPTION" ? "Aucun abonnement actif" :
       result.status === "GEO_REJECTED" ? `Hors zone (${result.distanceMeters}m)` :
-      "—";
+      result.status ? `Statut: ${result.status}` :
+      "Erreur inconnue";
 
     return (
       <View style={s.wrap}>

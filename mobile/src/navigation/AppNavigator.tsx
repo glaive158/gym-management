@@ -2,6 +2,7 @@ import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { LoginScreen } from "../screens/LoginScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
@@ -34,10 +35,26 @@ export function AppNavigator() {
             tabBarInactiveTintColor: "#94a3b8",
           }}
         >
-          <Tab.Screen name="Scan" component={ScanScreen} />
-          <Tab.Screen name="Abonnement" component={SubscriptionScreen} />
-          <Tab.Screen name="Historique" component={HistoryScreen} />
-          <Tab.Screen name="Profil" component={ProfileScreen} />
+          <Tab.Screen
+            name="Scan"
+            component={ScanScreen}
+            options={{ tabBarIcon: ({ color, size }) => <Ionicons name="qr-code-outline" size={size} color={color} /> }}
+          />
+          <Tab.Screen
+            name="Abonnement"
+            component={SubscriptionScreen}
+            options={{ tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} /> }}
+          />
+          <Tab.Screen
+            name="Historique"
+            component={HistoryScreen}
+            options={{ tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} /> }}
+          />
+          <Tab.Screen
+            name="Profil"
+            component={ProfileScreen}
+            options={{ tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} /> }}
+          />
         </Tab.Navigator>
       )}
     </NavigationContainer>

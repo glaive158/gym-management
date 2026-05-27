@@ -53,7 +53,7 @@
       ]
     ],
     "extra": {
-      "apiBaseUrl": "http://192.168.1.229:3000",
+      "apiBaseUrl": "http://213.199.62.127:3000",
       "eas": {
         "projectId": "2100647f-5326-498b-952c-5309585bc7af"
       }

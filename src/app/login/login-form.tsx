@@ -1,13 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+const ROLE_HOME: Record<string, string> = {
+  PLATFORM_OWNER: "/platform",
+  TENANT_ADMIN: "/admin",
+  MANAGER: "/manager",
+  MEMBER: "/me",
+};
 
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") ?? "/";
+  const callbackUrl = params.get("callbackUrl");
   const initialError = params.get("error");
   const activated = params.get("activated") === "1";
 
@@ -20,13 +27,19 @@ export function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: false, callbackUrl });
-    setLoading(false);
+    const res = await signIn("credentials", { email, password, redirect: false });
     if (res?.error) {
+      setLoading(false);
       setError("Identifiants invalides");
       return;
     }
-    router.push(callbackUrl);
+    if (callbackUrl) {
+      router.push(callbackUrl);
+    } else {
+      const session = await getSession();
+      const role = session?.user?.role as string | undefined;
+      router.push((role && ROLE_HOME[role]) || "/");
+    }
     router.refresh();
   }
 

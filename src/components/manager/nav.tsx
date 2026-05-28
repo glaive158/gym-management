@@ -13,7 +13,10 @@ export function ManagerNav() {
         <Link href="/manager/checkin-live" className="text-sm text-slate-400 hover:text-slate-200">Check-ins live</Link>
         <Link href="/manager/reports" className="text-sm text-slate-400 hover:text-slate-200">Rapports</Link>
       </div>
-      <SignOutButton />
+      <div className="flex items-center gap-4">
+        <Link href="/account/password" className="text-sm text-slate-400 hover:text-slate-200">Mot de passe</Link>
+        <SignOutButton />
+      </div>
     </nav>
   );
 }

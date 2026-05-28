@@ -34,17 +34,26 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           tenantId: user.tenantId,
           gymId: user.gymId,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.tenantId = user.tenantId;
         token.gymId = user.gymId;
+        token.mustChangePassword = user.mustChangePassword;
+      } else if (trigger === "update") {
+        // Refresh the flag after the user changes their password.
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { mustChangePassword: true },
+        });
+        if (fresh) token.mustChangePassword = fresh.mustChangePassword;
       }
       return token;
     },
@@ -54,6 +63,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as Role;
         session.user.tenantId = token.tenantId as string | null;
         session.user.gymId = token.gymId as string | null;
+        session.user.mustChangePassword = Boolean(token.mustChangePassword);
       }
       return session;
     },

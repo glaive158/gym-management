@@ -12,7 +12,10 @@ export function AdminNav() {
         <Link href="/admin/billing" className="text-sm text-slate-400 hover:text-slate-200">Facturation</Link>
         <Link href="/admin/reports" className="text-sm text-slate-400 hover:text-slate-200">Rapports</Link>
       </div>
-      <SignOutButton />
+      <div className="flex items-center gap-4">
+        <Link href="/account/password" className="text-sm text-slate-400 hover:text-slate-200">Mot de passe</Link>
+        <SignOutButton />
+      </div>
     </nav>
   );
 }

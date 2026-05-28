@@ -18,7 +18,7 @@ describe("buildAuthContext", () => {
 
   it("builds context for PLATFORM_OWNER with null tenantId", () => {
     const ctx = buildAuthContext({
-      user: { id: "u1", email: "po@x.com", name: "PO", role: Role.PLATFORM_OWNER, tenantId: null, gymId: null },
+      user: { id: "u1", email: "po@x.com", name: "PO", role: Role.PLATFORM_OWNER, tenantId: null, gymId: null, mustChangePassword: false },
       expires: "2099-01-01",
     });
     expect(ctx).toEqual({
@@ -31,7 +31,7 @@ describe("buildAuthContext", () => {
 
   it("builds context for MANAGER with tenantId and gymId", () => {
     const ctx = buildAuthContext({
-      user: { id: "u2", email: "m@x.com", name: "M", role: Role.MANAGER, tenantId: "t1", gymId: "g1" },
+      user: { id: "u2", email: "m@x.com", name: "M", role: Role.MANAGER, tenantId: "t1", gymId: "g1", mustChangePassword: false },
       expires: "2099-01-01",
     });
     expect(ctx?.tenantId).toBe("t1");

@@ -14,12 +14,13 @@ afterAll(async () => { await testPrisma.$disconnect(); });
 describe("createMember", () => {
   beforeEach(async () => { await resetDb(); });
 
-  it("creates a MEMBER ACTIVE with passwordless account", async () => {
+  it("creates a MEMBER ACTIVE with a hashed password and mustChangePassword=true", async () => {
     const t = await seed();
     const r = await createMember({
       tenantId: t.id,
       name: "Aliou", email: "aliou@x.com", phone: "+221770000000",
       avatar: "/uploads/avatar1.jpg",
+      password: "secret123",
       prisma: testPrisma,
     });
     expect(r.success).toBe(true);
@@ -28,7 +29,10 @@ describe("createMember", () => {
     expect(u.status).toBe(UserStatus.ACTIVE);
     expect(u.tenantId).toBe(t.id);
     expect(u.avatar).toBe("/uploads/avatar1.jpg");
-    expect(u.activationToken).not.toBeNull();
+    expect(u.passwordHash).not.toBeNull();
+    expect(u.passwordHash).not.toBe("secret123");
+    expect(u.activationToken).toBeNull();
+    expect(u.mustChangePassword).toBe(true);
   });
 
   it("rejects without avatar (required for anti-fraud)", async () => {
@@ -37,21 +41,34 @@ describe("createMember", () => {
       tenantId: t.id,
       name: "Aliou", email: "a@x.com", phone: "+221770000000",
       avatar: "",
+      password: "secret123",
       prisma: testPrisma,
     });
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/photo|avatar/i);
   });
 
+  it("rejects a password shorter than 8 characters", async () => {
+    const t = await seed();
+    const r = await createMember({
+      tenantId: t.id,
+      name: "Aliou", email: "short@x.com", phone: "+221770000000",
+      avatar: "/uploads/a.jpg",
+      password: "short",
+      prisma: testPrisma,
+    });
+    expect(r.success).toBe(false);
+  });
+
   it("rejects duplicate email", async () => {
     const t = await seed();
     await createMember({
       tenantId: t.id, name: "A", email: "a@x.com", phone: "+221770000001",
-      avatar: "/uploads/x.jpg", prisma: testPrisma,
+      avatar: "/uploads/x.jpg", password: "secret123", prisma: testPrisma,
     });
     const r = await createMember({
       tenantId: t.id, name: "B", email: "a@x.com", phone: "+221770000002",
-      avatar: "/uploads/y.jpg", prisma: testPrisma,
+      avatar: "/uploads/y.jpg", password: "secret123", prisma: testPrisma,
     });
     expect(r.success).toBe(false);
   });
@@ -62,16 +79,16 @@ describe("listMembers", () => {
 
   it("returns members of a tenant only ordered by name", async () => {
     const t = await seed();
-    await createMember({ tenantId: t.id, name: "Beta", email: "b@x.com", phone: "+221770000001", avatar: "/uploads/b.jpg", prisma: testPrisma });
-    await createMember({ tenantId: t.id, name: "Alpha", email: "a@x.com", phone: "+221770000002", avatar: "/uploads/a.jpg", prisma: testPrisma });
+    await createMember({ tenantId: t.id, name: "Beta", email: "b@x.com", phone: "+221770000001", avatar: "/uploads/b.jpg", password: "secret123", prisma: testPrisma });
+    await createMember({ tenantId: t.id, name: "Alpha", email: "a@x.com", phone: "+221770000002", avatar: "/uploads/a.jpg", password: "secret123", prisma: testPrisma });
     const list = await listMembers({ tenantId: t.id, prisma: testPrisma });
     expect(list.map(m => m.name)).toEqual(["Alpha", "Beta"]);
   });
 
   it("filters by search query (name / email / phone)", async () => {
     const t = await seed();
-    await createMember({ tenantId: t.id, name: "Aliou Diop", email: "aliou@x.com", phone: "+221770000001", avatar: "/uploads/a.jpg", prisma: testPrisma });
-    await createMember({ tenantId: t.id, name: "Fatou Ndiaye", email: "fatou@x.com", phone: "+221770000002", avatar: "/uploads/b.jpg", prisma: testPrisma });
+    await createMember({ tenantId: t.id, name: "Aliou Diop", email: "aliou@x.com", phone: "+221770000001", avatar: "/uploads/a.jpg", password: "secret123", prisma: testPrisma });
+    await createMember({ tenantId: t.id, name: "Fatou Ndiaye", email: "fatou@x.com", phone: "+221770000002", avatar: "/uploads/b.jpg", password: "secret123", prisma: testPrisma });
     const r = await listMembers({ tenantId: t.id, search: "fatou", prisma: testPrisma });
     expect(r).toHaveLength(1);
     expect(r[0].name).toBe("Fatou Ndiaye");
@@ -88,7 +105,7 @@ describe("getMember", () => {
     });
     const c = await createMember({
       tenantId: t2.id, name: "X", email: "x@x.com", phone: "+221770000001",
-      avatar: "/uploads/x.jpg", prisma: testPrisma,
+      avatar: "/uploads/x.jpg", password: "secret123", prisma: testPrisma,
     });
     const r = await getMember({ tenantId: t.id, memberId: c.userId!, prisma: testPrisma });
     expect(r).toBeNull();
@@ -102,7 +119,7 @@ describe("updateMember", () => {
     const t = await seed();
     const c = await createMember({
       tenantId: t.id, name: "A", email: "a@x.com", phone: "+221770000001",
-      avatar: "/uploads/a.jpg", prisma: testPrisma,
+      avatar: "/uploads/a.jpg", password: "secret123", prisma: testPrisma,
     });
     const r = await updateMember({
       tenantId: t.id, memberId: c.userId!,

@@ -11,6 +11,7 @@ declare module "next-auth" {
       role: Role;
       tenantId: string | null;
       gymId: string | null;
+      mustChangePassword: boolean;
     };
   }
 
@@ -19,6 +20,7 @@ declare module "next-auth" {
     role: Role;
     tenantId: string | null;
     gymId: string | null;
+    mustChangePassword: boolean;
   }
 }
 
@@ -28,5 +30,6 @@ declare module "next-auth/jwt" {
     role: Role;
     tenantId: string | null;
     gymId: string | null;
+    mustChangePassword: boolean;
   }
 }

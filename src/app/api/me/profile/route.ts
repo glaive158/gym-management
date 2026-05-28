@@ -9,6 +9,7 @@ export async function GET(req: Request) {
     where: { id: auth.userId },
     select: {
       id: true, name: true, email: true, phone: true, avatar: true,
+      mustChangePassword: true,
       gym: { select: { id: true, name: true, address: true } },
     },
   });

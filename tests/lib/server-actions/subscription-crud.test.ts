@@ -14,7 +14,7 @@ async function seedFull() {
   });
   const m = await createMember({
     tenantId: t.id, name: "Aliou", email: "a@x.com", phone: "+221770000001",
-    avatar: "/uploads/a.jpg", prisma: testPrisma,
+    avatar: "/uploads/a.jpg", password: "secret123", prisma: testPrisma,
   });
   const p = await createPlan({
     tenantId: t.id, gymId: g.id, name: "Mensuel", durationDays: 30, price: 25000, prisma: testPrisma,
@@ -49,7 +49,7 @@ describe("assignSubscription", () => {
     });
     const otherMember = await createMember({
       tenantId: t2.id, name: "X", email: "x@x.com", phone: "+221770000002",
-      avatar: "/uploads/x.jpg", prisma: testPrisma,
+      avatar: "/uploads/x.jpg", password: "secret123", prisma: testPrisma,
     });
     const r = await assignSubscription({
       tenantId: t.id, memberId: otherMember.userId!, planId,

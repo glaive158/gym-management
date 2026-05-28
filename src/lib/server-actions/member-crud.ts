@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { PrismaClient, Role, User, UserStatus } from "@prisma/client";
 import { tenantPrisma } from "@/lib/prisma-tenant";
-import { generateActivationToken } from "@/lib/activation-token";
+import { hashPassword } from "@/lib/password";
 
 const MemberSchema = z.object({
   name: z.string().min(1, "Nom requis"),
   email: z.string().email("Email invalide"),
   phone: z.string().min(5, "Téléphone requis"),
   avatar: z.string().min(1, "Photo membre requise pour l'anti-fraude"),
+  password: z.string().min(8, "Mot de passe trop court (8 caractères minimum)"),
 });
 
 const MemberUpdateSchema = z.object({
@@ -22,15 +23,15 @@ export interface CreateMemberInput {
   email: string;
   phone: string;
   avatar: string;
+  password: string;
   prisma: PrismaClient;
-  appUrl?: string;
 }
 
 export async function createMember(
   input: CreateMemberInput
-): Promise<{ success: boolean; userId?: string; activationUrl?: string; error?: string }> {
+): Promise<{ success: boolean; userId?: string; error?: string }> {
   const parsed = MemberSchema.safeParse({
-    name: input.name, email: input.email, phone: input.phone, avatar: input.avatar,
+    name: input.name, email: input.email, phone: input.phone, avatar: input.avatar, password: input.password,
   });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
@@ -42,7 +43,7 @@ export async function createMember(
     return { success: false, error: "Cet email est déjà utilisé" };
   }
 
-  const { token, expiresAt } = generateActivationToken();
+  const passwordHash = await hashPassword(parsed.data.password);
   const scoped = tenantPrisma(input.prisma, input.tenantId);
   const member = await scoped.user.create({
     data: {
@@ -50,17 +51,15 @@ export async function createMember(
       email,
       phone: parsed.data.phone,
       avatar: parsed.data.avatar,
-      passwordHash: null,
+      passwordHash,
       role: Role.MEMBER,
       status: UserStatus.ACTIVE,
-      activationToken: token,
-      activationTokenExpiresAt: expiresAt,
+      passwordSetAt: new Date(),
+      mustChangePassword: true,
     },
   });
 
-  const appUrl = input.appUrl ?? process.env.APP_URL ?? "http://localhost:3000";
-  const activationUrl = `${appUrl}/activate?token=${token}`;
-  return { success: true, userId: member.id, activationUrl };
+  return { success: true, userId: member.id };
 }
 
 export interface ListMembersInput {

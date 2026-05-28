@@ -75,17 +75,18 @@ export function MemberForm() {
         <input className={inputCls} required value={form.name} onChange={update("name")} />
       </div>
       <div>
-        <label className="block text-sm mb-1 text-slate-300">Email</label>
-        <input className={inputCls} type="email" required value={form.email} onChange={update("email")} />
+        <label className="block text-sm mb-1 text-slate-300">Email (optionnel)</label>
+        <input className={inputCls} type="email" value={form.email} onChange={update("email")} />
+        <p className="text-xs text-slate-500 mt-1">Requis seulement si le membre utilise l&apos;application.</p>
       </div>
       <div>
         <label className="block text-sm mb-1 text-slate-300">Téléphone</label>
         <input className={inputCls} required value={form.phone} onChange={update("phone")} />
       </div>
       <div>
-        <label className="block text-sm mb-1 text-slate-300">Mot de passe initial</label>
-        <input className={inputCls} type="password" required minLength={8} value={form.password} onChange={update("password")} />
-        <p className="text-xs text-slate-500 mt-1">8 caractères minimum. Le membre le changera à sa première connexion.</p>
+        <label className="block text-sm mb-1 text-slate-300">Mot de passe initial (optionnel)</label>
+        <input className={inputCls} type="password" minLength={8} value={form.password} onChange={update("password")} />
+        <p className="text-xs text-slate-500 mt-1">8 caractères minimum si renseigné. Nécessaire pour l&apos;accès à l&apos;application.</p>
       </div>
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button type="submit" disabled={loading || uploading || !avatar}

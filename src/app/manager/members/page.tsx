@@ -51,7 +51,7 @@ export default async function MembersList({ searchParams }: { searchParams: { q?
                     : <div className="w-10 h-10 bg-slate-800 rounded" />}
                 </td>
                 <td className="px-4 py-3 text-slate-100">{m.name}</td>
-                <td className="px-4 py-3 text-slate-400">{m.email}</td>
+                <td className="px-4 py-3 text-slate-400">{m.email ?? "—"}</td>
                 <td className="px-4 py-3 text-slate-400">{m.phone}</td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center gap-4 justify-end">

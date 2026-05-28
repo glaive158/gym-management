@@ -30,6 +30,6 @@ export async function loginMobile(input: {
   return {
     success: true,
     token,
-    user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar },
+    user: { id: user.id, name: user.name, email: user.email ?? "", avatar: user.avatar },
   };
 }

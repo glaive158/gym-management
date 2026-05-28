@@ -35,6 +35,22 @@ describe("createMember", () => {
     expect(u.mustChangePassword).toBe(true);
   });
 
+  it("creates a member without email or password (manager-managed, no app access)", async () => {
+    const t = await seed();
+    const r = await createMember({
+      tenantId: t.id,
+      name: "Sans Email", phone: "+221770000050",
+      avatar: "/uploads/se.jpg",
+      prisma: testPrisma,
+    });
+    expect(r.success).toBe(true);
+    const u = await testPrisma.user.findUniqueOrThrow({ where: { id: r.userId! } });
+    expect(u.email).toBeNull();
+    expect(u.passwordHash).toBeNull();
+    expect(u.mustChangePassword).toBe(false);
+    expect(u.status).toBe(UserStatus.ACTIVE);
+  });
+
   it("rejects without avatar (required for anti-fraud)", async () => {
     const t = await seed();
     const r = await createMember({

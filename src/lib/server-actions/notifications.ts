@@ -6,7 +6,7 @@ interface SubWithMember {
   id: string;
   tenantId: string;
   endDate: Date;
-  member: { id: string; name: string; email: string; phone: string | null };
+  member: { id: string; name: string; email: string | null; phone: string | null };
 }
 
 function startOfDay(d: Date): Date {
@@ -86,16 +86,19 @@ export async function sendExpirationNotifications(input: { prisma: PrismaClient 
     for (const s of subs) {
       const text = buildText(t.type, s.member.name, s.endDate);
 
-      const emailSent = await tryLogged(
-        input.prisma,
-        s.tenantId,
-        s.member.id,
-        s.id,
-        t.type,
-        NotificationChannel.EMAIL,
-        () => sendEmail({ to: s.member.email, subject: "Expiration de votre abonnement", text, html: `<p>${text}</p>` })
-      );
-      if (emailSent) sent++;
+      const memberEmail = s.member.email;
+      if (memberEmail) {
+        const emailSent = await tryLogged(
+          input.prisma,
+          s.tenantId,
+          s.member.id,
+          s.id,
+          t.type,
+          NotificationChannel.EMAIL,
+          () => sendEmail({ to: memberEmail, subject: "Expiration de votre abonnement", text, html: `<p>${text}</p>` })
+        );
+        if (emailSent) sent++;
+      }
 
       if (s.member.phone) {
         const waSent = await tryLogged(

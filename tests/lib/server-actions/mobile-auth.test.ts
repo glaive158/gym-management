@@ -22,7 +22,7 @@ describe("loginMobile", () => {
 
   it("returns token + user on valid creds", async () => {
     const u = await seedMember();
-    const r = await loginMobile({ email: u.email, password: "Hunter2Pass!", secret: SECRET, prisma: testPrisma });
+    const r = await loginMobile({ email: u.email!, password: "Hunter2Pass!", secret: SECRET, prisma: testPrisma });
     expect(r.success).toBe(true);
     expect(r.token).toBeTruthy();
     expect(r.user?.id).toBe(u.id);
@@ -30,7 +30,7 @@ describe("loginMobile", () => {
 
   it("rejects wrong password", async () => {
     const u = await seedMember();
-    const r = await loginMobile({ email: u.email, password: "wrong", secret: SECRET, prisma: testPrisma });
+    const r = await loginMobile({ email: u.email!, password: "wrong", secret: SECRET, prisma: testPrisma });
     expect(r.success).toBe(false);
   });
 
@@ -42,7 +42,7 @@ describe("loginMobile", () => {
     const admin = await testPrisma.user.create({
       data: { name: "A", email: `a${Date.now()}@x.com`, passwordHash: hash, role: Role.TENANT_ADMIN, status: UserStatus.ACTIVE, tenantId: tenant.id },
     });
-    const r = await loginMobile({ email: admin.email, password: "pass1234", secret: SECRET, prisma: testPrisma });
+    const r = await loginMobile({ email: admin.email!, password: "pass1234", secret: SECRET, prisma: testPrisma });
     expect(r.success).toBe(false);
   });
 });

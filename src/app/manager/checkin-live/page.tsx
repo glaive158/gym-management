@@ -33,7 +33,7 @@ export default async function CheckinLivePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Check-ins en direct</h1>
-        <ManualCheckin members={members} />
+        <ManualCheckin members={members.map((m) => ({ id: m.id, name: m.name, email: m.email ?? "" }))} />
       </div>
       <LiveFeed gymId={ctx.gymId} initial={initial} />
     </div>

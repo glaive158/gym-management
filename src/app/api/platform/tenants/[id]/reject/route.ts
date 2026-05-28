@@ -26,7 +26,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const owner = await prisma.user.findFirst({
     where: { tenantId: params.id, role: Role.TENANT_ADMIN },
   });
-  if (tenant && owner) {
+  if (tenant && owner?.email) {
     const email = buildRejectionEmail({
       recipientName: owner.name,
       organizationName: tenant.name,

@@ -62,7 +62,7 @@ export default async function MemberDetail({ params }: { params: { id: string } 
           : <div className="w-24 h-24 bg-slate-800 rounded" />}
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold">{member.name}</h1>
-          <p className="text-sm text-slate-400">{member.email} · {member.phone}</p>
+          <p className="text-sm text-slate-400">{member.email ?? "sans email"} · {member.phone}</p>
           <p className="text-xs text-slate-500">Statut : {member.status}</p>
           <MemberEditForm member={{ id: member.id, name: member.name, phone: member.phone }} />
         </div>

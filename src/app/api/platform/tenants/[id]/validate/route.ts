@@ -22,7 +22,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const owner = await prisma.user.findFirst({
     where: { tenantId: params.id, role: Role.TENANT_ADMIN },
   });
-  if (owner && result.activationUrl) {
+  if (owner?.email && result.activationUrl) {
     const email = buildActivationEmail({
       recipientName: owner.name,
       activationUrl: result.activationUrl,

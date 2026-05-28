@@ -5,10 +5,10 @@ import { hashPassword } from "@/lib/password";
 
 const MemberSchema = z.object({
   name: z.string().min(1, "Nom requis"),
-  email: z.string().email("Email invalide"),
+  email: z.string().email("Email invalide").optional(),
   phone: z.string().min(5, "Téléphone requis"),
   avatar: z.string().min(1, "Photo membre requise pour l'anti-fraude"),
-  password: z.string().min(8, "Mot de passe trop court (8 caractères minimum)"),
+  password: z.string().min(8, "Mot de passe trop court (8 caractères minimum)").optional(),
 });
 
 const MemberUpdateSchema = z.object({
@@ -20,30 +20,38 @@ const MemberUpdateSchema = z.object({
 export interface CreateMemberInput {
   tenantId: string;
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   avatar: string;
-  password: string;
+  password?: string;
   prisma: PrismaClient;
 }
 
 export async function createMember(
   input: CreateMemberInput
 ): Promise<{ success: boolean; userId?: string; error?: string }> {
+  // Empty strings from form bodies are treated as "not provided".
+  const rawEmail = input.email?.trim() ? input.email.trim() : undefined;
+  const rawPassword = input.password?.trim() ? input.password : undefined;
+
   const parsed = MemberSchema.safeParse({
-    name: input.name, email: input.email, phone: input.phone, avatar: input.avatar, password: input.password,
+    name: input.name, email: rawEmail, phone: input.phone, avatar: input.avatar, password: rawPassword,
   });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
 
-  const email = parsed.data.email.toLowerCase();
-  const existing = await input.prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return { success: false, error: "Cet email est déjà utilisé" };
+  const email = parsed.data.email ? parsed.data.email.toLowerCase() : null;
+  if (email) {
+    const existing = await input.prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return { success: false, error: "Cet email est déjà utilisé" };
+    }
   }
 
-  const passwordHash = await hashPassword(parsed.data.password);
+  // A member can log in only if it has a password; without one it is a
+  // manager-managed record (check-in by staff, no app access).
+  const passwordHash = parsed.data.password ? await hashPassword(parsed.data.password) : null;
   const scoped = tenantPrisma(input.prisma, input.tenantId);
   const member = await scoped.user.create({
     data: {
@@ -54,8 +62,8 @@ export async function createMember(
       passwordHash,
       role: Role.MEMBER,
       status: UserStatus.ACTIVE,
-      passwordSetAt: new Date(),
-      mustChangePassword: true,
+      passwordSetAt: passwordHash ? new Date() : null,
+      mustChangePassword: passwordHash != null,
     },
   });
 

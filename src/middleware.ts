@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { Role } from "@prisma/client";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/checkin"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/activate", "/checkin"];
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

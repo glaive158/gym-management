@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import QRCode from "qrcode";
 import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { tenantPrisma } from "@/lib/prisma-tenant";
 import { GymDeleteButton } from "@/components/admin/gym-delete-button";
+import { GymQrPrint } from "@/components/admin/gym-qr-print";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,10 @@ export default async function GymDetail({ params }: { params: { id: string } }) 
     },
   });
   if (!gym) notFound();
+
+  const baseUrl = process.env.APP_URL ?? "";
+  const checkinUrl = `${baseUrl}/checkin?gym=${gym.qrToken}`;
+  const qrDataUrl = await QRCode.toDataURL(checkinUrl, { width: 320, margin: 2 });
 
   return (
     <div className="space-y-6">
@@ -42,9 +48,14 @@ export default async function GymDetail({ params }: { params: { id: string } }) 
           </div>
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded p-4">
-          <div className="text-xs text-slate-400 uppercase mb-2">QR Code (URL de check-in)</div>
-          <div className="text-xs text-slate-300 font-mono break-all">
-            /checkin?gym={gym.qrToken}
+          <div className="text-xs text-slate-400 uppercase mb-2">QR Code de check-in</div>
+          <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrDataUrl} alt="QR check-in" className="w-28 h-28 rounded bg-white p-1" />
+            <div className="space-y-2 min-w-0">
+              <div className="text-xs text-slate-400 break-all font-mono">{checkinUrl}</div>
+              <GymQrPrint gymName={gym.name} qrDataUrl={qrDataUrl} checkinUrl={checkinUrl} />
+            </div>
           </div>
         </div>
       </div>

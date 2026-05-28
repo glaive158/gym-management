@@ -21,15 +21,22 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
   }
 
   const resend = new Resend(apiKey);
-  const { error } = await resend.emails.send({
-    from,
-    to: input.to,
-    subject: input.subject,
-    html: input.html,
-    text: input.text,
-  });
-  if (error) {
-    throw new Error(`Resend error: ${error.message}`);
+  try {
+    const { error } = await resend.emails.send({
+      from,
+      to: input.to,
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+    });
+    if (error) {
+      // Best-effort: log and continue. Account creation / activation links
+      // must not fail because the email provider rejected the send (e.g.
+      // Resend testing mode, unverified domain, rate limit).
+      console.error(`Resend error (email not sent to ${input.to}): ${error.message}`);
+    }
+  } catch (err) {
+    console.error(`Resend threw (email not sent to ${input.to}):`, err);
   }
 }
 

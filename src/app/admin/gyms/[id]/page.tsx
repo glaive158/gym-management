@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { tenantPrisma } from "@/lib/prisma-tenant";
+import { GymDeleteButton } from "@/components/admin/gym-delete-button";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +26,11 @@ export default async function GymDetail({ params }: { params: { id: string } }) 
       <Link href="/admin/gyms" className="text-sm text-slate-400 hover:text-slate-200">← Salles</Link>
       <div className="flex justify-between items-start">
         <h1 className="text-2xl font-semibold">{gym.name}</h1>
-        <Link href={`/admin/gyms/${gym.id}/edit`}
-          className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-900 text-sm">Modifier</Link>
+        <div className="flex items-center gap-3">
+          <Link href={`/admin/gyms/${gym.id}/edit`}
+            className="px-3 py-2 rounded border border-slate-700 hover:bg-slate-900 text-sm">Modifier</Link>
+          <GymDeleteButton gym={{ id: gym.id, name: gym.name }} />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-slate-900 border border-slate-800 rounded p-4">

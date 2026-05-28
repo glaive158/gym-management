@@ -4,6 +4,7 @@ import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { listManagers } from "@/lib/server-actions/manager-crud";
 import { listGyms } from "@/lib/server-actions/gym-crud";
+import { ManagerDeactivateButton } from "@/components/admin/manager-deactivate-button";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +34,12 @@ export default async function ManagersList() {
               <th className="px-4 py-3 text-left">Email</th>
               <th className="px-4 py-3 text-left">Salle</th>
               <th className="px-4 py-3 text-left">Statut</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {managers.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">Aucun gérant</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Aucun gérant</td></tr>
             )}
             {managers.map((m) => (
               <tr key={m.id} className="border-b border-slate-800 last:border-0">
@@ -50,6 +52,11 @@ export default async function ManagersList() {
                     m.status === "PENDING" ? "bg-amber-950 text-amber-300 border-amber-900" :
                     "bg-red-950 text-red-300 border-red-900"
                   }`}>{m.status}</span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {m.status !== "SUSPENDED" && (
+                    <ManagerDeactivateButton manager={{ id: m.id, name: m.name }} />
+                  )}
                 </td>
               </tr>
             ))}

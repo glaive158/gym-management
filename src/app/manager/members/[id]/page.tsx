@@ -8,6 +8,7 @@ import { listPayments } from "@/lib/server-actions/payment-crud";
 import { SubscriptionAssign } from "@/components/manager/subscription-assign";
 import { PaymentForm } from "@/components/manager/payment-form";
 import { MemberEditForm } from "@/components/manager/member-edit-form";
+import { SubscriptionCancel } from "@/components/manager/subscription-cancel";
 import { SubscriptionStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +80,7 @@ export default async function MemberDetail({ params }: { params: { id: string } 
                 <th className="px-4 py-2 text-left">Du</th>
                 <th className="px-4 py-2 text-left">Au</th>
                 <th className="px-4 py-2 text-left">Statut</th>
+                <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
@@ -88,6 +90,9 @@ export default async function MemberDetail({ params }: { params: { id: string } 
                   <td className="px-4 py-2 text-slate-400">{s.startDate.toLocaleDateString("fr-FR")}</td>
                   <td className="px-4 py-2 text-slate-400">{s.endDate.toLocaleDateString("fr-FR")}</td>
                   <td className="px-4 py-2 text-slate-300">{s.status}</td>
+                  <td className="px-4 py-2 text-right">
+                    {s.status === SubscriptionStatus.ACTIVE && <SubscriptionCancel subscriptionId={s.id} />}
+                  </td>
                 </tr>
               ))}
             </tbody>

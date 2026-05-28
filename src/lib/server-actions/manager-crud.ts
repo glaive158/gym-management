@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { PrismaClient, Role, User, UserStatus } from "@prisma/client";
 import { tenantPrisma } from "@/lib/prisma-tenant";
-import { generateActivationToken } from "@/lib/activation-token";
+import { hashPassword } from "@/lib/password";
 
 const ManagerSchema = z.object({
   name: z.string().min(1, "Nom requis"),
   email: z.string().email("Email invalide"),
   phone: z.string().min(5, "Téléphone requis"),
+  password: z.string().min(8, "Mot de passe trop court (8 caractères minimum)"),
 });
 
 export interface CreateManagerInput {
@@ -15,14 +16,19 @@ export interface CreateManagerInput {
   name: string;
   email: string;
   phone: string;
+  password: string;
   prisma: PrismaClient;
-  appUrl?: string;
 }
 
 export async function createManager(
   input: CreateManagerInput
 ): Promise<{ success: boolean; userId?: string; activationUrl?: string; error?: string }> {
-  const parsed = ManagerSchema.safeParse({ name: input.name, email: input.email, phone: input.phone });
+  const parsed = ManagerSchema.safeParse({
+    name: input.name,
+    email: input.email,
+    phone: input.phone,
+    password: input.password,
+  });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
@@ -39,24 +45,21 @@ export async function createManager(
     return { success: false, error: "Salle introuvable dans cette organisation" };
   }
 
-  const { token, expiresAt } = generateActivationToken();
+  const passwordHash = await hashPassword(parsed.data.password);
   const user = await scoped.user.create({
     data: {
       name: parsed.data.name,
       email,
       phone: parsed.data.phone,
-      passwordHash: null,
+      passwordHash,
       role: Role.MANAGER,
-      status: UserStatus.PENDING,
+      status: UserStatus.ACTIVE,
       gymId: input.gymId,
-      activationToken: token,
-      activationTokenExpiresAt: expiresAt,
+      passwordSetAt: new Date(),
     },
   });
 
-  const appUrl = input.appUrl ?? process.env.APP_URL ?? "http://localhost:3000";
-  const activationUrl = `${appUrl}/activate?token=${token}`;
-  return { success: true, userId: user.id, activationUrl };
+  return { success: true, userId: user.id };
 }
 
 export interface ListManagersInput {

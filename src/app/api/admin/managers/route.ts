@@ -3,7 +3,6 @@ import { getCurrentAuthContext } from "@/lib/auth-context";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createManager } from "@/lib/server-actions/manager-crud";
-import { sendEmail, buildActivationEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   const ctx = await getCurrentAuthContext();
@@ -17,17 +16,10 @@ export async function POST(req: Request) {
     name: String(body.name ?? ""),
     email: String(body.email ?? ""),
     phone: String(body.phone ?? ""),
+    password: String(body.password ?? ""),
     prisma,
   });
   if (!r.success) return NextResponse.json({ error: r.error }, { status: 400 });
 
-  if (r.activationUrl) {
-    const email = buildActivationEmail({
-      recipientName: String(body.name),
-      activationUrl: r.activationUrl,
-    });
-    await sendEmail({ to: String(body.email).toLowerCase(), ...email });
-  }
-
-  return NextResponse.json({ ok: true, userId: r.userId, activationUrl: r.activationUrl });
+  return NextResponse.json({ ok: true, userId: r.userId });
 }

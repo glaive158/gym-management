@@ -7,6 +7,7 @@ import { listPlans } from "@/lib/server-actions/plan-crud";
 import { listPayments } from "@/lib/server-actions/payment-crud";
 import { SubscriptionAssign } from "@/components/manager/subscription-assign";
 import { PaymentForm } from "@/components/manager/payment-form";
+import { MemberEditForm } from "@/components/manager/member-edit-form";
 import { SubscriptionStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -58,10 +59,11 @@ export default async function MemberDetail({ params }: { params: { id: string } 
           /* eslint-disable-next-line @next/next/no-img-element */
           ? <img src={member.avatar} alt={member.name} className="w-24 h-24 object-cover rounded" />
           : <div className="w-24 h-24 bg-slate-800 rounded" />}
-        <div>
+        <div className="space-y-2">
           <h1 className="text-2xl font-semibold">{member.name}</h1>
           <p className="text-sm text-slate-400">{member.email} · {member.phone}</p>
-          <p className="text-xs text-slate-500 mt-1">Statut : {member.status}</p>
+          <p className="text-xs text-slate-500">Statut : {member.status}</p>
+          <MemberEditForm member={{ id: member.id, name: member.name, phone: member.phone }} />
         </div>
       </div>
 

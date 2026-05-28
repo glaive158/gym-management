@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { testPrisma, resetDb } from "../../helpers/db";
-import { createMember, listMembers, getMember, updateMember } from "@/lib/server-actions/member-crud";
+import { createMember, listMembers, getMember, updateMember, deactivateMember } from "@/lib/server-actions/member-crud";
 import { Role, TenantStatus, UserStatus } from "@prisma/client";
 
 async function seed() {
@@ -130,5 +130,25 @@ describe("updateMember", () => {
     const u = await testPrisma.user.findUniqueOrThrow({ where: { id: c.userId! } });
     expect(u.name).toBe("Aliou Diop");
     expect(u.phone).toBe("+221770000099");
+  });
+});
+
+describe("deactivateMember", () => {
+  beforeEach(async () => { await resetDb(); });
+
+  it("flips member status to SUSPENDED and hides it from the list", async () => {
+    const t = await seed();
+    const c = await createMember({
+      tenantId: t.id, name: "A", email: "a@x.com", phone: "+221770000001",
+      avatar: "/uploads/a.jpg", password: "secret123", prisma: testPrisma,
+    });
+    const r = await deactivateMember({ tenantId: t.id, memberId: c.userId!, prisma: testPrisma });
+    expect(r.success).toBe(true);
+
+    const u = await testPrisma.user.findUniqueOrThrow({ where: { id: c.userId! } });
+    expect(u.status).toBe(UserStatus.SUSPENDED);
+
+    const list = await listMembers({ tenantId: t.id, prisma: testPrisma });
+    expect(list.find((m) => m.id === c.userId!)).toBeUndefined();
   });
 });

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { listMembers } from "@/lib/server-actions/member-crud";
+import { MemberRowActions } from "@/components/manager/member-row-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,10 @@ export default async function MembersList({ searchParams }: { searchParams: { q?
                 <td className="px-4 py-3 text-slate-400">{m.email}</td>
                 <td className="px-4 py-3 text-slate-400">{m.phone}</td>
                 <td className="px-4 py-3 text-right">
-                  <Link href={`/manager/members/${m.id}`} className="text-blue-400 hover:text-blue-300">Voir →</Link>
+                  <div className="flex items-center gap-4 justify-end">
+                    <Link href={`/manager/members/${m.id}`} className="text-blue-400 hover:text-blue-300">Voir →</Link>
+                    <MemberRowActions member={{ id: m.id, name: m.name }} />
+                  </div>
                 </td>
               </tr>
             ))}

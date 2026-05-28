@@ -74,6 +74,7 @@ export async function listMembers(input: ListMembersInput): Promise<User[]> {
   return scoped.user.findMany({
     where: {
       role: Role.MEMBER,
+      status: { not: UserStatus.SUSPENDED },
       ...(search
         ? {
             OR: [
@@ -120,6 +121,27 @@ export async function updateMember(input: UpdateMemberInput): Promise<{ success:
   const scoped = tenantPrisma(input.prisma, input.tenantId);
   try {
     await scoped.user.update({ where: { id: input.memberId }, data: parsed.data });
+    return { success: true };
+  } catch {
+    return { success: false, error: "Membre introuvable" };
+  }
+}
+
+export interface DeactivateMemberInput {
+  tenantId: string;
+  memberId: string;
+  prisma: PrismaClient;
+}
+
+// Soft-delete: keep the member row (and its payment / check-in history) but
+// flip status to SUSPENDED so it disappears from the members list.
+export async function deactivateMember(input: DeactivateMemberInput): Promise<{ success: boolean; error?: string }> {
+  const scoped = tenantPrisma(input.prisma, input.tenantId);
+  try {
+    await scoped.user.update({
+      where: { id: input.memberId },
+      data: { status: UserStatus.SUSPENDED },
+    });
     return { success: true };
   } catch {
     return { success: false, error: "Membre introuvable" };

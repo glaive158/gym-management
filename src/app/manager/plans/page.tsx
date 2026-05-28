@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentAuthContext } from "@/lib/auth-context";
 import { prisma } from "@/lib/prisma";
 import { listPlans } from "@/lib/server-actions/plan-crud";
+import { PlanRowActions } from "@/components/manager/plan-row-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,12 @@ export default async function PlansList() {
               <th className="px-4 py-3 text-left">Durée</th>
               <th className="px-4 py-3 text-left">Prix</th>
               <th className="px-4 py-3 text-left">Statut</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
             {plans.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">Aucune formule</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Aucune formule</td></tr>
             )}
             {plans.map((p) => (
               <tr key={p.id} className="border-b border-slate-800 last:border-0">
@@ -43,6 +45,11 @@ export default async function PlansList() {
                   <span className={`text-xs px-2 py-1 rounded border ${
                     p.isActive ? "bg-green-950 text-green-300 border-green-900" : "bg-slate-800 text-slate-400 border-slate-700"
                   }`}>{p.isActive ? "Active" : "Désactivée"}</span>
+                </td>
+                <td className="px-4 py-3">
+                  {p.isActive && (
+                    <PlanRowActions plan={{ id: p.id, name: p.name, durationDays: p.durationDays, price: p.price }} />
+                  )}
                 </td>
               </tr>
             ))}

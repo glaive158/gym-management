@@ -9,6 +9,7 @@ import { ProfileScreen } from "../screens/ProfileScreen";
 import { ScanScreen } from "../screens/ScanScreen";
 import { SubscriptionScreen } from "../screens/SubscriptionScreen";
 import { HistoryScreen } from "../screens/HistoryScreen";
+import { ChangePasswordScreen } from "../screens/ChangePasswordScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -54,6 +55,11 @@ export function AppNavigator() {
             name="Profil"
             component={ProfileScreen}
             options={{ tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} /> }}
+          />
+          <Tab.Screen
+            name="Mot de passe"
+            component={ChangePasswordScreen}
+            options={{ tabBarIcon: ({ color, size }) => <Ionicons name="lock-closed-outline" size={size} color={color} /> }}
           />
         </Tab.Navigator>
       )}

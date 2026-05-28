@@ -7,6 +7,7 @@ interface User {
   name: string;
   email: string;
   avatar: string | null;
+  mustChangePassword?: boolean;
 }
 
 interface Ctx {
@@ -15,6 +16,7 @@ interface Ctx {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<Ctx | null>(null);
@@ -62,5 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setU(null);
   }
 
-  return <AuthContext.Provider value={{ token, user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  async function refreshUser() {
+    if (!token) return;
+    const u = await apiFetch<User>("/api/me/profile", { token });
+    setU(u);
+  }
+
+  return (
+    <AuthContext.Provider value={{ token, user, loading, login, logout, refreshUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

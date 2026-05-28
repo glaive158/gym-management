@@ -15,6 +15,13 @@ export function ProfileScreen() {
       )}
       <Text style={s.name}>{user?.name}</Text>
       <Text style={s.email}>{user?.email}</Text>
+      {user?.mustChangePassword && (
+        <View style={s.banner}>
+          <Text style={s.bannerText}>
+            Changez votre mot de passe dans l&apos;onglet « Mot de passe ».
+          </Text>
+        </View>
+      )}
       <Pressable onPress={logout} style={s.logoutBtn}>
         <Text style={s.logoutText}>Déconnexion</Text>
       </Pressable>
@@ -29,6 +36,8 @@ const s = StyleSheet.create({
   initials: { color: "#f1f5f9", fontSize: 36, fontWeight: "700" },
   name: { fontSize: 20, fontWeight: "600", color: "#f1f5f9" },
   email: { fontSize: 14, color: "#94a3b8", marginTop: 4 },
+  banner: { backgroundColor: "#422006", borderColor: "#854d0e", borderWidth: 1, borderRadius: 8, padding: 12, marginTop: 16 },
+  bannerText: { color: "#fcd34d", fontSize: 13, textAlign: "center" },
   logoutBtn: { marginTop: 24, paddingVertical: 10, paddingHorizontal: 24, borderRadius: 8, backgroundColor: "#ef4444" },
   logoutText: { color: "#fff", fontWeight: "600" },
 });

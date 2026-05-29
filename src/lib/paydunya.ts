@@ -82,7 +82,13 @@ export async function createInvoice(
     });
     const json = await res.json().catch(() => ({}));
     if (json.response_code === "00" && json.token) {
-      return { success: true, token: json.token, redirectUrl: json.checkout_url };
+      // PayDunya returns the checkout URL in `checkout_url` (live) or inside
+      // `response_text` (sandbox); fall back to building it from the token.
+      const fromText = typeof json.response_text === "string" && json.response_text.startsWith("http")
+        ? json.response_text
+        : undefined;
+      const redirectUrl = json.checkout_url || fromText || `https://paydunya.com/checkout/invoice/${json.token}`;
+      return { success: true, token: json.token, redirectUrl };
     }
     return { success: false, error: json.response_text ?? `PayDunya error (${res.status})` };
   } catch (err) {

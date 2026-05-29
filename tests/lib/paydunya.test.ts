@@ -33,6 +33,18 @@ describe("createInvoice", () => {
     expect(JSON.parse(opts.body).invoice.total_amount).toBe(25000);
   });
 
+  it("uses response_text URL when checkout_url absent (sandbox)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      status: 200,
+      json: async () => ({ response_code: "00", token: "test_abc", response_text: "https://paydunya.com/sandbox-checkout/invoice/test_abc" }),
+    }));
+    const r = await createInvoice(cfg, {
+      amount: 1000, description: "x", customData: {}, callbackUrl: "a", returnUrl: "b", cancelUrl: "c",
+    });
+    expect(r.success).toBe(true);
+    expect(r.redirectUrl).toBe("https://paydunya.com/sandbox-checkout/invoice/test_abc");
+  });
+
   it("returns error when response_code not 00", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       status: 200, json: async () => ({ response_code: "1001", response_text: "Bad keys" }),

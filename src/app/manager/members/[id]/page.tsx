@@ -9,6 +9,7 @@ import { SubscriptionAssign } from "@/components/manager/subscription-assign";
 import { PaymentForm } from "@/components/manager/payment-form";
 import { MemberEditForm } from "@/components/manager/member-edit-form";
 import { SubscriptionCancel } from "@/components/manager/subscription-cancel";
+import { PaydunyaLink } from "@/components/manager/paydunya-link";
 import { SubscriptionStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -114,6 +115,14 @@ export default async function MemberDetail({ params }: { params: { id: string } 
       <div>
         <h2 className="text-lg font-semibold mb-3">Enregistrer un paiement</h2>
         <PaymentForm memberId={member.id} subscriptions={activeSubscriptions} />
+      </div>
+
+      <div>
+        <h2 className="text-lg font-semibold mb-3">Lien de paiement en ligne (PayDunya)</h2>
+        <PaydunyaLink
+          memberId={member.id}
+          plans={plans.map((p) => ({ id: p.id, name: p.name, price: p.price, currency: p.currency, durationDays: p.durationDays }))}
+        />
       </div>
 
       <div>

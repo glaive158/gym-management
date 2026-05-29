@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionStatus } from "@prisma/client";
 import { SignOutButton } from "@/components/platform/sign-out-button";
+import { PayOnline } from "@/components/member/pay-online";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ const CHECKIN_LABELS: Record<string, string> = {
   NO_SUBSCRIPTION: "Sans abonnement",
 };
 
-export default async function MemberSpace() {
+export default async function MemberSpace({ searchParams }: { searchParams: { payment?: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== "MEMBER") redirect("/login");
 
@@ -30,6 +31,13 @@ export default async function MemberSpace() {
   if (!member) redirect("/login");
 
   const active = member.subscriptions.find((s) => s.status === SubscriptionStatus.ACTIVE);
+  const plans = member.tenantId
+    ? await prisma.plan.findMany({
+        where: { tenantId: member.tenantId, isActive: true },
+        orderBy: { durationDays: "asc" },
+      })
+    : [];
+  const paymentStatus = searchParams.payment;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -55,6 +63,17 @@ export default async function MemberSpace() {
           </div>
         </section>
 
+        {paymentStatus === "success" && (
+          <div className="bg-green-950/40 border border-green-900 rounded p-3 text-green-300 text-sm">
+            Paiement reçu. Votre abonnement est en cours d&apos;activation.
+          </div>
+        )}
+        {paymentStatus === "cancel" && (
+          <div className="bg-red-950/40 border border-red-900 rounded p-3 text-red-300 text-sm">
+            Paiement annulé.
+          </div>
+        )}
+
         {member.mustChangePassword && (
           <div className="bg-amber-950/40 border border-amber-900 rounded p-3 text-amber-300 text-sm">
             Pensez à changer votre mot de passe. <Link href="/account/password" className="underline">Changer maintenant</Link>
@@ -79,6 +98,12 @@ export default async function MemberSpace() {
               Aucun abonnement actif. Contactez votre salle.
             </div>
           )}
+        </section>
+
+        {/* Paiement en ligne */}
+        <section>
+          <h2 className="text-lg font-semibold mb-3">Payer / Renouveler en ligne</h2>
+          <PayOnline plans={plans.map((p) => ({ id: p.id, name: p.name, price: p.price, currency: p.currency, durationDays: p.durationDays }))} />
         </section>
 
         {/* Historique check-ins */}

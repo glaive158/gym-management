@@ -326,3 +326,27 @@ model NotificationLog {
   @@index([tenantId])
   @@index([memberId])
 }
+
+enum PaymentIntentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model PaymentIntent {
+  id        String              @id @default(cuid())
+  tenantId  String
+  gymId     String
+  memberId  String
+  planId    String
+  amount    Int
+  token     String?             @unique
+  status    PaymentIntentStatus @default(PENDING)
+  paymentId String?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([tenantId])
+  @@index([memberId])
+}

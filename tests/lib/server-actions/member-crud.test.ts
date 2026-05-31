@@ -163,8 +163,25 @@ describe("deactivateMember", () => {
 
     const u = await testPrisma.user.findUniqueOrThrow({ where: { id: c.userId! } });
     expect(u.status).toBe(UserStatus.SUSPENDED);
+    expect(u.email).toBeNull();
 
     const list = await listMembers({ tenantId: t.id, prisma: testPrisma });
     expect(list.find((m) => m.id === c.userId!)).toBeUndefined();
+  });
+
+  it("frees the email so a new member can be created with the same address", async () => {
+    const t = await seed();
+    const first = await createMember({
+      tenantId: t.id, name: "Old", email: "reuse@x.com", phone: "+221770000001",
+      avatar: "/uploads/a.jpg", password: "secret123", prisma: testPrisma,
+    });
+    await deactivateMember({ tenantId: t.id, memberId: first.userId!, prisma: testPrisma });
+
+    const second = await createMember({
+      tenantId: t.id, name: "New", email: "reuse@x.com", phone: "+221770000002",
+      avatar: "/uploads/b.jpg", password: "secret123", prisma: testPrisma,
+    });
+    expect(second.success).toBe(true);
+    expect(second.userId).not.toBe(first.userId);
   });
 });

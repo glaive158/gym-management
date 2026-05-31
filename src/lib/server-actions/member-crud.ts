@@ -142,13 +142,19 @@ export interface DeactivateMemberInput {
 }
 
 // Soft-delete: keep the member row (and its payment / check-in history) but
-// flip status to SUSPENDED so it disappears from the members list.
+// flip status to SUSPENDED so it disappears from the members list. Also free
+// the email so a new member can be created with the same address; the
+// previous one stays linked to its history through its id.
 export async function deactivateMember(input: DeactivateMemberInput): Promise<{ success: boolean; error?: string }> {
   const scoped = tenantPrisma(input.prisma, input.tenantId);
   try {
     await scoped.user.update({
       where: { id: input.memberId },
-      data: { status: UserStatus.SUSPENDED },
+      data: {
+        status: UserStatus.SUSPENDED,
+        email: null,
+        activationToken: null,
+      },
     });
     return { success: true };
   } catch {

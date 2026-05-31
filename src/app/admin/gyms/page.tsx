@@ -10,14 +10,31 @@ export default async function GymsList() {
   const ctx = await getCurrentAuthContext();
   if (!ctx?.tenantId) redirect("/login");
 
-  const gyms = await listGyms({ tenantId: ctx.tenantId, prisma });
+  const [gyms, tenant] = await Promise.all([
+    listGyms({ tenantId: ctx.tenantId, prisma }),
+    prisma.tenant.findUnique({ where: { id: ctx.tenantId }, select: { gymQuota: true } }),
+  ]);
+  const quota = tenant?.gymQuota ?? 1;
+  const atLimit = gyms.length >= quota;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
-        <h1 className="text-2xl font-semibold">Salles ({gyms.length})</h1>
-        <Link href="/admin/gyms/new"
-          className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-sm font-medium">+ Ajouter</Link>
+        <div>
+          <h1 className="text-2xl font-semibold">Salles ({gyms.length} / {quota})</h1>
+          {atLimit && (
+            <p className="text-xs text-amber-400 mt-1">
+              Quota atteint. <Link href="/admin/upgrade" className="underline">Augmenter mon quota</Link>
+            </p>
+          )}
+        </div>
+        {atLimit ? (
+          <Link href="/admin/upgrade"
+            className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-sm font-medium">Augmenter le quota</Link>
+        ) : (
+          <Link href="/admin/gyms/new"
+            className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-sm font-medium">+ Ajouter</Link>
+        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {gyms.length === 0 && (

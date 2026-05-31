@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { TenantStatusBadge } from "@/components/platform/tenant-status-badge";
+import { TenantQuotaForm } from "@/components/platform/tenant-quota-form";
 import { TenantActions } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +48,11 @@ export default async function TenantDetail({ params }: { params: { id: string } 
         <div className="bg-slate-900 border border-slate-800 rounded p-4">
           <div className="text-xs text-slate-400 uppercase mb-2">Plan</div>
           <div className="text-slate-100">{tenant.monthlyPricePerGym.toLocaleString("fr-FR")} F / salle / mois</div>
-          <div className="text-sm text-slate-400">Salles : {tenant.gyms.length}</div>
+          <div className="text-sm text-slate-400">Salles : {tenant.gyms.length} / {tenant.gymQuota}</div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-xs text-slate-400 uppercase">Quota :</span>
+            <TenantQuotaForm tenantId={tenant.id} current={tenant.gymQuota} />
+          </div>
           {tenant.trialEndsAt && (
             <div className="text-sm text-slate-400 mt-2">
               Essai jusqu&apos;au {tenant.trialEndsAt.toLocaleDateString("fr-FR")}

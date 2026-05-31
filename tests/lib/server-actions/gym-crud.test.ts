@@ -3,11 +3,12 @@ import { testPrisma, resetDb } from "../../helpers/db";
 import { createGym, updateGym, listGyms, deleteGym } from "@/lib/server-actions/gym-crud";
 import { TenantStatus } from "@prisma/client";
 
-async function seedTenant() {
+async function seedTenant(opts: { quota?: number } = {}) {
   return testPrisma.tenant.create({
     data: {
-      name: "FitClub", slug: "fitclub", ownerEmail: "a@x.com",
+      name: "FitClub", slug: `fitclub-${Date.now()}-${Math.random()}`, ownerEmail: "a@x.com",
       ownerPhone: "1", city: "Dakar", status: TenantStatus.ACTIVE,
+      gymQuota: opts.quota ?? 10,
     },
   });
 }
@@ -40,6 +41,15 @@ describe("createGym", () => {
     const t = await seedTenant();
     const r = await createGym({ tenantId: t.id, ...validInput, name: "", prisma: testPrisma });
     expect(r.success).toBe(false);
+  });
+
+  it("rejects when the tenant gym quota is reached", async () => {
+    const t = await seedTenant({ quota: 1 });
+    const first = await createGym({ tenantId: t.id, ...validInput, name: "G1", prisma: testPrisma });
+    expect(first.success).toBe(true);
+    const second = await createGym({ tenantId: t.id, ...validInput, name: "G2", prisma: testPrisma });
+    expect(second.success).toBe(false);
+    expect(second.error).toBe("QUOTA_REACHED");
   });
 });
 

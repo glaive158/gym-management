@@ -93,6 +93,7 @@ model Tenant {
   isBeta                Boolean       @default(false)
   trialEndsAt           DateTime?
   monthlyPricePerGym    Int           @default(25000)
+  gymQuota              Int           @default(1)
   billingStatus         BillingStatus @default(TRIAL)
   nextBillingDate       DateTime?
   validatedAt           DateTime?

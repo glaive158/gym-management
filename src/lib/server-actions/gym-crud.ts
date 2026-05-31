@@ -24,12 +24,27 @@ export interface CreateGymInput {
   longitude: number;
 }
 
+export const GYM_QUOTA_REACHED = "QUOTA_REACHED";
+
 export async function createGym(input: CreateGymInput): Promise<{ success: boolean; gymId?: string; error?: string }> {
   const parsed = GymBaseSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Données invalides" };
   }
+
+  // Enforce the per-tenant gym quota set by the PLATFORM_OWNER.
+  const tenant = await input.prisma.tenant.findUnique({
+    where: { id: input.tenantId },
+    select: { gymQuota: true },
+  });
+  if (!tenant) return { success: false, error: "Organisation introuvable" };
+
   const client = tenantPrisma(input.prisma, input.tenantId);
+  const count = await client.gym.count();
+  if (count >= tenant.gymQuota) {
+    return { success: false, error: GYM_QUOTA_REACHED };
+  }
+
   const gym = await client.gym.create({ data: parsed.data as any });
   return { success: true, gymId: gym.id };
 }

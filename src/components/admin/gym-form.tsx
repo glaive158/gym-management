@@ -71,6 +71,10 @@ export function GymForm({
     setLoading(false);
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
+      if (j.error === "QUOTA_REACHED") {
+        router.push("/admin/upgrade");
+        return;
+      }
       setError(j.error ?? "Erreur");
       return;
     }

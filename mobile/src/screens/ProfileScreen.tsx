@@ -1,13 +1,14 @@
 import React from "react";
 import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import { absoluteUrl } from "../lib/api";
 
 export function ProfileScreen() {
   const { user, logout } = useAuth();
   return (
     <View style={s.wrap}>
       {user?.avatar ? (
-        <Image source={{ uri: user.avatar }} style={s.avatar} />
+        <Image source={{ uri: absoluteUrl(user.avatar) ?? "" }} style={s.avatar} />
       ) : (
         <View style={[s.avatar, s.avatarPlaceholder]}>
           <Text style={s.initials}>{user?.name?.[0] ?? "?"}</Text>

@@ -26,9 +26,13 @@ services:
     ports:
       - "3000:3000"
     env_file: .env
+    volumes:
+      # Persist user-uploaded files (member avatars) across rebuilds.
+      - uploads_data:/app/public/uploads
     depends_on:
       db:
         condition: service_healthy
 
 volumes:
   postgres_data:
+  uploads_data:

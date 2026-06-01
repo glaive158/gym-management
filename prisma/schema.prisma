@@ -111,6 +111,8 @@ model Tenant {
   invoices              TenantInvoice[]
   tenantPayments        TenantPayment[]
   notifications         NotificationLog[]
+  fitnessPrograms       FitnessProgram[]
+  fitnessExercises      FitnessExercise[]
   validatedBy           User?         @relation("TenantValidator", fields: [validatedById], references: [id])
 
   @@index([status])
@@ -143,6 +145,7 @@ model User {
   checkIns                 CheckIn[]  @relation("MemberCheckIns")
   recordedTenantPayments   TenantPayment[] @relation("TenantPaymentRecorder")
   notifications            NotificationLog[] @relation("MemberNotifications")
+  fitnessPrograms          FitnessProgram[] @relation("MemberFitnessPrograms")
 
   @@index([tenantId])
   @@index([gymId])
@@ -170,6 +173,7 @@ model Gym {
   plans       Plan[]
   payments    Payment[]
   checkIns    CheckIn[]
+  fitnessPrograms FitnessProgram[]
 
   @@index([tenantId])
   @@index([qrToken])
@@ -350,4 +354,56 @@ model PaymentIntent {
 
   @@index([tenantId])
   @@index([memberId])
+}
+
+enum FitnessProgramType {
+  FULL_BODY
+  GAINAGE_ABDOS
+  JAMBES_FESSIERS
+  HAUT_CORPS
+  CUSTOM
+}
+
+model FitnessProgram {
+  id          String             @id @default(cuid())
+  tenantId    String
+  gymId       String
+  createdById String?
+  name        String
+  color       String             @default("#C8FF00")
+  type        FitnessProgramType @default(CUSTOM)
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  gym       Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
+  createdBy User?             @relation("MemberFitnessPrograms", fields: [createdById], references: [id], onDelete: SetNull)
+  exercises FitnessExercise[]
+
+  @@index([tenantId])
+  @@index([gymId])
+  @@index([createdById])
+}
+
+model FitnessExercise {
+  id                String   @id @default(cuid())
+  programId         String
+  tenantId          String
+  name              String
+  sets              Int
+  repsOrDurationSec Int
+  recoverySec       Int      @default(60)
+  muscles           String
+  steps             Json
+  tip               String?
+  order             Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  program FitnessProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@index([tenantId])
 }

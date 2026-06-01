@@ -113,3 +113,28 @@ describe("exercise CRUD", () => {
     expect(!add.success && add.error).toBe("FORBIDDEN");
   });
 });
+
+describe("per-gym isolation within a tenant", () => {
+  beforeEach(async () => { await resetDb(); });
+  afterAll(async () => { await testPrisma.$disconnect(); });
+
+  it("manager of gym B cannot edit gym A's program in the same tenant", async () => {
+    const { tenant, gym } = await seed();
+    const gymB = await testPrisma.gym.create({
+      data: { tenantId: tenant.id, name: "GB", address: "y", city: "Dakar", phone: "2", latitude: 14.8, longitude: -17.5 },
+    });
+    const c = await createProgram({ tenantId: tenant.id, gymId: gym.id, createdById: null, name: "GymA", color: "#fff", type: "CUSTOM", prisma: testPrisma });
+    const id = c.success ? c.data.id : "";
+    // Manager scoped to gym B passes gymId B → program belongs to gym A → not found.
+    const r = await updateProgram({ id, tenantId: tenant.id, gymId: gymB.id, actorId: "mgrB", isManager: true, name: "Hack", prisma: testPrisma });
+    expect(!r.success && r.error).toBe("NOT_FOUND");
+  });
+
+  it("manager of gym A can edit gym A's program when gymId matches", async () => {
+    const { tenant, gym } = await seed();
+    const c = await createProgram({ tenantId: tenant.id, gymId: gym.id, createdById: null, name: "GymA", color: "#fff", type: "CUSTOM", prisma: testPrisma });
+    const id = c.success ? c.data.id : "";
+    const r = await updateProgram({ id, tenantId: tenant.id, gymId: gym.id, actorId: "mgrA", isManager: true, name: "GymA2", prisma: testPrisma });
+    expect(r.success).toBe(true);
+  });
+});

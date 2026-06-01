@@ -14,15 +14,18 @@ interface ExerciseInput {
 }
 
 // Allow if manager editing a gym program, or member editing own private program.
+// When gymId is provided, the program must also belong to that gym (per-gym isolation
+// within a multi-gym tenant).
 async function assertCanEdit(
   prisma: PrismaClient,
   programId: string,
   tenantId: string,
   actorId: string,
   isManager: boolean,
+  gymId?: string,
 ): Promise<Result<{ createdById: string | null }>> {
   const program = await prisma.fitnessProgram.findFirst({
-    where: { id: programId, tenantId },
+    where: { id: programId, tenantId, ...(gymId ? { gymId } : {}) },
     select: { createdById: true },
   });
   if (!program) return { success: false, error: "NOT_FOUND" };
@@ -70,6 +73,7 @@ export async function createProgram(args: {
 export async function updateProgram(args: {
   id: string;
   tenantId: string;
+  gymId?: string;
   actorId: string;
   isManager: boolean;
   name?: string;
@@ -78,8 +82,8 @@ export async function updateProgram(args: {
   isActive?: boolean;
   prisma: PrismaClient;
 }) {
-  const { id, tenantId, actorId, isManager, prisma, ...fields } = args;
-  const can = await assertCanEdit(prisma, id, tenantId, actorId, isManager);
+  const { id, tenantId, gymId, actorId, isManager, prisma, ...fields } = args;
+  const can = await assertCanEdit(prisma, id, tenantId, actorId, isManager, gymId);
   if (!can.success) return can;
   const data = await prisma.fitnessProgram.update({
     where: { id },
@@ -96,12 +100,13 @@ export async function updateProgram(args: {
 export async function deleteProgram(args: {
   id: string;
   tenantId: string;
+  gymId?: string;
   actorId: string;
   isManager: boolean;
   prisma: PrismaClient;
 }) {
-  const { id, tenantId, actorId, isManager, prisma } = args;
-  const can = await assertCanEdit(prisma, id, tenantId, actorId, isManager);
+  const { id, tenantId, gymId, actorId, isManager, prisma } = args;
+  const can = await assertCanEdit(prisma, id, tenantId, actorId, isManager, gymId);
   if (!can.success) return can;
   await prisma.fitnessProgram.delete({ where: { id } });
   return { success: true as const, data: { id } };
@@ -110,12 +115,13 @@ export async function deleteProgram(args: {
 export async function addExercise(args: {
   programId: string;
   tenantId: string;
+  gymId?: string;
   actorId: string;
   isManager: boolean;
   prisma: PrismaClient;
 } & ExerciseInput) {
-  const { programId, tenantId, actorId, isManager, prisma, ...ex } = args;
-  const can = await assertCanEdit(prisma, programId, tenantId, actorId, isManager);
+  const { programId, tenantId, gymId, actorId, isManager, prisma, ...ex } = args;
+  const can = await assertCanEdit(prisma, programId, tenantId, actorId, isManager, gymId);
   if (!can.success) return can;
   const count = await prisma.fitnessExercise.count({ where: { programId } });
   const data = await prisma.fitnessExercise.create({
@@ -138,17 +144,18 @@ export async function addExercise(args: {
 export async function updateExercise(args: {
   id: string;
   tenantId: string;
+  gymId?: string;
   actorId: string;
   isManager: boolean;
   prisma: PrismaClient;
 } & Partial<ExerciseInput>) {
-  const { id, tenantId, actorId, isManager, prisma, ...fields } = args;
+  const { id, tenantId, gymId, actorId, isManager, prisma, ...fields } = args;
   const exercise = await prisma.fitnessExercise.findFirst({
     where: { id, tenantId },
     select: { programId: true },
   });
   if (!exercise) return { success: false as const, error: "NOT_FOUND" };
-  const can = await assertCanEdit(prisma, exercise.programId, tenantId, actorId, isManager);
+  const can = await assertCanEdit(prisma, exercise.programId, tenantId, actorId, isManager, gymId);
   if (!can.success) return can;
   const data = await prisma.fitnessExercise.update({
     where: { id },
@@ -168,17 +175,18 @@ export async function updateExercise(args: {
 export async function deleteExercise(args: {
   id: string;
   tenantId: string;
+  gymId?: string;
   actorId: string;
   isManager: boolean;
   prisma: PrismaClient;
 }) {
-  const { id, tenantId, actorId, isManager, prisma } = args;
+  const { id, tenantId, gymId, actorId, isManager, prisma } = args;
   const exercise = await prisma.fitnessExercise.findFirst({
     where: { id, tenantId },
     select: { programId: true },
   });
   if (!exercise) return { success: false as const, error: "NOT_FOUND" };
-  const can = await assertCanEdit(prisma, exercise.programId, tenantId, actorId, isManager);
+  const can = await assertCanEdit(prisma, exercise.programId, tenantId, actorId, isManager, gymId);
   if (!can.success) return can;
   await prisma.fitnessExercise.delete({ where: { id } });
   return { success: true as const, data: { id } };

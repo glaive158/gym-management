@@ -41,16 +41,16 @@ export async function managerUpdateProgram(input: {
   isActive?: boolean;
 }) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || ctx.role !== Role.MANAGER) return unauthorized();
-  const r = await crud.updateProgram({ ...input, tenantId: ctx.tenantId, actorId: ctx.userId, isManager: true, prisma });
+  if (!ctx?.tenantId || !ctx.gymId || ctx.role !== Role.MANAGER) return unauthorized();
+  const r = await crud.updateProgram({ ...input, tenantId: ctx.tenantId, gymId: ctx.gymId, actorId: ctx.userId, isManager: true, prisma });
   revalidatePath("/manager/fitness");
   return r;
 }
 
 export async function managerDeleteProgram(id: string) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || ctx.role !== Role.MANAGER) return unauthorized();
-  const r = await crud.deleteProgram({ id, tenantId: ctx.tenantId, actorId: ctx.userId, isManager: true, prisma });
+  if (!ctx?.tenantId || !ctx.gymId || ctx.role !== Role.MANAGER) return unauthorized();
+  const r = await crud.deleteProgram({ id, tenantId: ctx.tenantId, gymId: ctx.gymId, actorId: ctx.userId, isManager: true, prisma });
   revalidatePath("/manager/fitness");
   return r;
 }
@@ -60,8 +60,8 @@ export async function managerAddExercise(input: {
   recoverySec: number; muscles: string; steps: string[]; tip?: string | null;
 }) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || ctx.role !== Role.MANAGER) return unauthorized();
-  const r = await crud.addExercise({ ...input, tenantId: ctx.tenantId, actorId: ctx.userId, isManager: true, prisma });
+  if (!ctx?.tenantId || !ctx.gymId || ctx.role !== Role.MANAGER) return unauthorized();
+  const r = await crud.addExercise({ ...input, tenantId: ctx.tenantId, gymId: ctx.gymId, actorId: ctx.userId, isManager: true, prisma });
   revalidatePath(`/manager/fitness/${input.programId}`);
   return r;
 }
@@ -71,16 +71,16 @@ export async function managerUpdateExercise(input: {
   recoverySec?: number; muscles?: string; steps?: string[]; tip?: string | null;
 }) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || ctx.role !== Role.MANAGER) return unauthorized();
-  const r = await crud.updateExercise({ ...input, tenantId: ctx.tenantId, actorId: ctx.userId, isManager: true, prisma });
+  if (!ctx?.tenantId || !ctx.gymId || ctx.role !== Role.MANAGER) return unauthorized();
+  const r = await crud.updateExercise({ ...input, tenantId: ctx.tenantId, gymId: ctx.gymId, actorId: ctx.userId, isManager: true, prisma });
   revalidatePath("/manager/fitness");
   return r;
 }
 
 export async function managerDeleteExercise(id: string) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || ctx.role !== Role.MANAGER) return unauthorized();
-  const r = await crud.deleteExercise({ id, tenantId: ctx.tenantId, actorId: ctx.userId, isManager: true, prisma });
+  if (!ctx?.tenantId || !ctx.gymId || ctx.role !== Role.MANAGER) return unauthorized();
+  const r = await crud.deleteExercise({ id, tenantId: ctx.tenantId, gymId: ctx.gymId, actorId: ctx.userId, isManager: true, prisma });
   revalidatePath("/manager/fitness");
   return r;
 }

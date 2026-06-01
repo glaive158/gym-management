@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 export default async function EditFitnessProgram({ params }: { params: { id: string } }) {
   const ctx = await getCurrentAuthContext();
-  if (!ctx?.tenantId || ctx.role !== "MANAGER") redirect("/login");
+  if (!ctx?.tenantId || !ctx.gymId || ctx.role !== "MANAGER") redirect("/login");
   const program = await prisma.fitnessProgram.findFirst({
-    where: { id: params.id, tenantId: ctx.tenantId, createdById: null },
+    where: { id: params.id, tenantId: ctx.tenantId, gymId: ctx.gymId, createdById: null },
     include: { exercises: { orderBy: { order: "asc" } } },
   });
   if (!program) notFound();

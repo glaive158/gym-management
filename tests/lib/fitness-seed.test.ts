@@ -1,5 +1,5 @@
 // tests/lib/fitness-seed.test.ts
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { testPrisma, resetDb } from "../helpers/db";
 import { seedDefaultFitnessPrograms } from "@/lib/fitness-seed";
 import { TenantStatus } from "@prisma/client";
@@ -39,5 +39,32 @@ describe("seedDefaultFitnessPrograms", () => {
     await seedDefaultFitnessPrograms({ tenantId: tenant.id, gymId: gym.id, prisma: testPrisma });
     const programs = await testPrisma.fitnessProgram.findMany({ where: { gymId: gym.id } });
     expect(programs).toHaveLength(4);
+  });
+
+  it("rolls back fully when seeding fails mid-way (no partial set)", async () => {
+    const { tenant, gym } = await seedGym();
+
+    // Inject a defaults list whose 3rd program has an invalid enum type so the
+    // 3rd create throws after the first two succeed inside the transaction.
+    vi.resetModules();
+    vi.doMock("@/lib/fitness-defaults", () => ({
+      DEFAULT_PROGRAMS: [
+        { name: "A", color: "#fff", type: "FULL_BODY", exercises: [] },
+        { name: "B", color: "#fff", type: "GAINAGE_ABDOS", exercises: [] },
+        { name: "C", color: "#fff", type: "NOT_A_REAL_TYPE", exercises: [] },
+        { name: "D", color: "#fff", type: "HAUT_CORPS", exercises: [] },
+      ],
+    }));
+    const { seedDefaultFitnessPrograms: seedMocked } = await import("@/lib/fitness-seed");
+
+    await expect(
+      seedMocked({ tenantId: tenant.id, gymId: gym.id, prisma: testPrisma }),
+    ).rejects.toThrow();
+
+    const programs = await testPrisma.fitnessProgram.findMany({ where: { gymId: gym.id } });
+    expect(programs).toHaveLength(0);
+
+    vi.doUnmock("@/lib/fitness-defaults");
+    vi.resetModules();
   });
 });

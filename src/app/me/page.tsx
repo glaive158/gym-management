@@ -100,6 +100,20 @@ export default async function MemberSpace({ searchParams }: { searchParams: { pa
           )}
         </section>
 
+        {/* Fitness */}
+        <section>
+          <Link href="/me/fitness"
+            className="block bg-slate-900 border border-slate-800 hover:border-lime-500 rounded-lg p-4 transition-colors">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">💪 Mon suivi fitness</h2>
+                <p className="text-sm text-slate-400">Programme, séances, poids et progression</p>
+              </div>
+              <span className="text-slate-500">→</span>
+            </div>
+          </Link>
+        </section>
+
         {/* Paiement en ligne */}
         <section>
           <h2 className="text-lg font-semibold mb-3">Payer / Renouveler en ligne</h2>

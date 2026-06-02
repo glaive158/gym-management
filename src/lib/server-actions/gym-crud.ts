@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { PrismaClient, Gym } from "@prisma/client";
 import { tenantPrisma } from "@/lib/prisma-tenant";
+import { seedDefaultFitnessPrograms } from "@/lib/fitness-seed";
 
 const GymBaseSchema = z.object({
   name: z.string().min(1, "Nom requis"),
@@ -46,6 +47,7 @@ export async function createGym(input: CreateGymInput): Promise<{ success: boole
   }
 
   const gym = await client.gym.create({ data: parsed.data as any });
+  await seedDefaultFitnessPrograms({ tenantId: gym.tenantId, gymId: gym.id, prisma: input.prisma });
   return { success: true, gymId: gym.id };
 }
 

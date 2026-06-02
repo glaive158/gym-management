@@ -51,6 +51,15 @@ describe("createGym", () => {
     expect(second.success).toBe(false);
     expect(second.error).toBe("QUOTA_REACHED");
   });
+
+  it("seeds 4 default fitness programs", async () => {
+    const t = await seedTenant();
+    const r = await createGym({ tenantId: t.id, ...validInput, prisma: testPrisma });
+    expect(r.success).toBe(true);
+    const gym = (await testPrisma.gym.findFirst({ where: { tenantId: t.id } }))!;
+    const programs = await testPrisma.fitnessProgram.findMany({ where: { gymId: gym.id } });
+    expect(programs).toHaveLength(4);
+  });
 });
 
 describe("listGyms", () => {

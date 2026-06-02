@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useFitApp } from "@/hooks/use-fit-app";
 import type { ProgramDTO, FitProfile } from "@/components/member/fitness/types";
 import { TabHome } from "@/components/member/fitness/tab-home";
@@ -33,6 +34,12 @@ export function FitnessTracker({ programs, memberId }: { programs: ProgramDTO[];
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-20">
       <div className="max-w-md mx-auto">
+        <div className="px-4 pt-4">
+          <Link href="/me"
+            className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-slate-100">
+            <span aria-hidden>←</span> Tableau de bord
+          </Link>
+        </div>
         {tab === "home" && <TabHome fit={fit} onNav={setTab} />}
         {tab === "walk" && <TabWalk fit={fit} />}
         {tab === "program" && <TabProgram fit={fit} />}
@@ -64,6 +71,10 @@ function Onboarding({ onDone }: { onDone: (p: FitProfile) => void }) {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-5">
+        <Link href="/me"
+          className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-slate-100">
+          <span aria-hidden>←</span> Tableau de bord
+        </Link>
         <h1 className="text-xl font-semibold text-center">Configure ton programme</h1>
         <div>
           <label className="block text-sm text-slate-400 mb-1">Poids actuel (kg)</label>

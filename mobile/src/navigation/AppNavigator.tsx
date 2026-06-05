@@ -10,6 +10,7 @@ import { ScanScreen } from "../screens/ScanScreen";
 import { SubscriptionScreen } from "../screens/SubscriptionScreen";
 import { HistoryScreen } from "../screens/HistoryScreen";
 import { ChangePasswordScreen } from "../screens/ChangePasswordScreen";
+import { FitnessScreen } from "../screens/FitnessScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -45,6 +46,11 @@ export function AppNavigator() {
             name="Abonnement"
             component={SubscriptionScreen}
             options={{ tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} /> }}
+          />
+          <Tab.Screen
+            name="Forme"
+            component={FitnessScreen}
+            options={{ tabBarIcon: ({ color, size }) => <Ionicons name="barbell-outline" size={size} color={color} /> }}
           />
           <Tab.Screen
             name="Historique"

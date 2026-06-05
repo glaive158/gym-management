@@ -39,6 +39,7 @@ describe("fitness-tracking", () => {
     const { tenantId, memberId } = await seedMember();
     const r = await getFitnessData({ memberId, tenantId, prisma: testPrisma });
     expect(r.success).toBe(true);
+    if (!r.success) return;
     expect(r.data.profile).toBeNull();
     expect(r.data.weights).toEqual([]);
     expect(r.data.sessions).toEqual([]);

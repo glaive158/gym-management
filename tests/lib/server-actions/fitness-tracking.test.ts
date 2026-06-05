@@ -44,4 +44,34 @@ describe("fitness-tracking", () => {
     expect(r.data.sessions).toEqual([]);
     expect(r.data.weekData).toEqual([]);
   });
+
+  it("addWeightLog + addWorkoutSession surface in getFitnessData", async () => {
+    const { tenantId, memberId } = await seedMember();
+    await addWeightLog({ memberId, tenantId, date: "2026-06-02T00:00:00.000Z", weightKg: 79.5, sleepHours: 7, prisma: testPrisma });
+    await addWorkoutSession({ memberId, tenantId, date: "2026-06-02T00:00:00.000Z", programId: null, programName: "Marche", durationMin: 30, kind: "marche", prisma: testPrisma });
+    const r = await getFitnessData({ memberId, tenantId, prisma: testPrisma });
+    expect(r.success && r.data.weights.length).toBe(1);
+    expect(r.success && r.data.sleeps.length).toBe(1);
+    expect(r.success && r.data.sessions.length).toBe(1);
+    expect(r.success && r.data.sessions[0].programName).toBe("Marche");
+  });
+
+  it("toggleDayProgress flips done flag", async () => {
+    const { tenantId, memberId } = await seedMember();
+    await upsertProfile({ memberId, tenantId, startWeightKg: 80, goalWeightKg: 72, durationWeeks: 4, startDate: "2026-06-01T00:00:00.000Z", prisma: testPrisma });
+    await toggleDayProgress({ memberId, tenantId, weekIndex: 0, dayIndex: 0, prisma: testPrisma });
+    const r = await getFitnessData({ memberId, tenantId, prisma: testPrisma });
+    expect(r.success && r.data.weekData[0][0].done).toBe(true);
+    await toggleDayProgress({ memberId, tenantId, weekIndex: 0, dayIndex: 0, prisma: testPrisma });
+    const r2 = await getFitnessData({ memberId, tenantId, prisma: testPrisma });
+    expect(r2.success && r2.data.weekData[0][0].done).toBe(false);
+  });
+
+  it("tenant isolation: member never sees another tenant's data", async () => {
+    const a = await seedMember();
+    const b = await seedMember();
+    await addWeightLog({ memberId: a.memberId, tenantId: a.tenantId, date: "2026-06-02T00:00:00.000Z", weightKg: 79.5, prisma: testPrisma });
+    const r = await getFitnessData({ memberId: a.memberId, tenantId: b.tenantId, prisma: testPrisma });
+    expect(r.success && r.data.weights.length).toBe(0);
+  });
 });

@@ -145,7 +145,11 @@ model User {
   checkIns                 CheckIn[]  @relation("MemberCheckIns")
   recordedTenantPayments   TenantPayment[] @relation("TenantPaymentRecorder")
   notifications            NotificationLog[] @relation("MemberNotifications")
-  fitnessPrograms          FitnessProgram[] @relation("MemberFitnessPrograms")
+  fitnessPrograms          FitnessProgram[]       @relation("MemberFitnessPrograms")
+  fitnessProfile           FitnessProfile?        @relation("MemberFitnessProfile")
+  fitnessWeights           FitnessWeightLog[]     @relation("MemberFitnessWeights")
+  fitnessSessions          FitnessWorkoutSession[] @relation("MemberFitnessSessions")
+  fitnessProgress          FitnessDayProgress[]   @relation("MemberFitnessProgress")
 
   @@index([tenantId])
   @@index([gymId])
@@ -406,4 +410,57 @@ model FitnessExercise {
 
   @@index([programId])
   @@index([tenantId])
+}
+
+model FitnessProfile {
+  id            String   @id @default(cuid())
+  memberId      String   @unique
+  tenantId      String
+  startWeightKg Float
+  goalWeightKg  Float
+  durationWeeks Int
+  startDate     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  member        User     @relation("MemberFitnessProfile", fields: [memberId], references: [id], onDelete: Cascade)
+  @@index([memberId])
+  @@index([tenantId])
+}
+
+model FitnessWeightLog {
+  id         String   @id @default(cuid())
+  memberId   String
+  tenantId   String
+  date       DateTime
+  weightKg   Float
+  sleepHours Float?
+  createdAt  DateTime @default(now())
+  member     User     @relation("MemberFitnessWeights", fields: [memberId], references: [id], onDelete: Cascade)
+  @@index([memberId, date])
+}
+
+model FitnessWorkoutSession {
+  id          String   @id @default(cuid())
+  memberId    String
+  tenantId    String
+  date        DateTime
+  programId   String?
+  programName String
+  durationMin Int
+  kind        String
+  createdAt   DateTime @default(now())
+  member      User     @relation("MemberFitnessSessions", fields: [memberId], references: [id], onDelete: Cascade)
+  @@index([memberId, date])
+}
+
+model FitnessDayProgress {
+  id        String  @id @default(cuid())
+  memberId  String
+  tenantId  String
+  weekIndex Int
+  dayIndex  Int
+  done      Boolean @default(false)
+  member    User    @relation("MemberFitnessProgress", fields: [memberId], references: [id], onDelete: Cascade)
+  @@unique([memberId, weekIndex, dayIndex])
+  @@index([memberId])
 }

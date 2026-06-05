@@ -35,6 +35,24 @@ describe("fitness-tracking", () => {
     expect(count).toBe(28);
   });
 
+  it("upsertProfile regenerates day-progress on duration change, preserving done flags", async () => {
+    const { tenantId, memberId } = await seedMember();
+    await upsertProfile({ memberId, tenantId, startWeightKg: 80, goalWeightKg: 72, durationWeeks: 4, startDate: "2026-06-01T00:00:00.000Z", prisma: testPrisma });
+    await toggleDayProgress({ memberId, tenantId, weekIndex: 0, dayIndex: 0, prisma: testPrisma });
+    // grow 4 -> 12 weeks
+    await upsertProfile({ memberId, tenantId, startWeightKg: 80, goalWeightKg: 72, durationWeeks: 12, startDate: "2026-06-01T00:00:00.000Z", prisma: testPrisma });
+    expect(await testPrisma.fitnessDayProgress.count({ where: { memberId } })).toBe(84);
+    // existing done flag preserved
+    const day0 = await testPrisma.fitnessDayProgress.findFirst({ where: { memberId, weekIndex: 0, dayIndex: 0 } });
+    expect(day0?.done).toBe(true);
+    // new weeks are toggleable (not INTROUVABLE)
+    const t = await toggleDayProgress({ memberId, tenantId, weekIndex: 11, dayIndex: 6, prisma: testPrisma });
+    expect(t.success).toBe(true);
+    // shrink 12 -> 4 removes extra rows
+    await upsertProfile({ memberId, tenantId, startWeightKg: 80, goalWeightKg: 72, durationWeeks: 4, startDate: "2026-06-01T00:00:00.000Z", prisma: testPrisma });
+    expect(await testPrisma.fitnessDayProgress.count({ where: { memberId } })).toBe(28);
+  });
+
   it("getFitnessData returns empty shape when no profile", async () => {
     const { tenantId, memberId } = await seedMember();
     const r = await getFitnessData({ memberId, tenantId, prisma: testPrisma });

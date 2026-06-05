@@ -22,7 +22,7 @@ export async function getFitnessData(args: { memberId: string; tenantId: string;
 
   const weights: WeightDTO[] = weightRows.map((w) => ({ date: w.date.toISOString(), weightKg: w.weightKg }));
   const sleeps: SleepDTO[] = weightRows.filter((w) => w.sleepHours != null).map((w) => ({ date: w.date.toISOString(), hours: w.sleepHours as number }));
-  const sessions: SessionDTO[] = sessionRows.map((s) => ({ date: s.date.toISOString(), programId: s.programId ?? s.kind, programName: s.programName, durationMin: s.durationMin }));
+  const sessions: SessionDTO[] = sessionRows.map((s) => ({ date: s.date.toISOString(), programId: s.programId ?? (s.kind === "marche" ? "walk" : s.kind), programName: s.programName, durationMin: s.durationMin }));
 
   let weekData: WeekDayDTO[][] = [];
   if (profile) {
@@ -51,15 +51,23 @@ export async function upsertProfile(args: { memberId: string; tenantId: string; 
       create: { memberId, tenantId, startWeightKg, goalWeightKg, durationWeeks, startDate: new Date(startDate) },
       update: { startWeightKg, goalWeightKg, durationWeeks, startDate: new Date(startDate) },
     });
-    if (!existing) {
-      const rows = [];
-      for (let wi = 0; wi < durationWeeks; wi++) {
-        for (let di = 0; di < WEEKLY_SCHEDULE.length; di++) {
-          rows.push({ memberId, tenantId, weekIndex: wi, dayIndex: di, done: false });
-        }
-      }
-      await tx.fitnessDayProgress.createMany({ data: rows });
+    // Reconcile day-progress rows with durationWeeks. Missing rows are added
+    // (preserving existing `done` flags); rows beyond the new duration are removed.
+    // Handles both first creation and a later duration change (e.g. 4 -> 12).
+    if (existing) {
+      await tx.fitnessDayProgress.deleteMany({ where: { memberId, tenantId, weekIndex: { gte: durationWeeks } } });
     }
+    const existingRows = existing
+      ? await tx.fitnessDayProgress.findMany({ where: { memberId, tenantId }, select: { weekIndex: true, dayIndex: true } })
+      : [];
+    const present = new Set(existingRows.map((r) => `${r.weekIndex}-${r.dayIndex}`));
+    const rows = [];
+    for (let wi = 0; wi < durationWeeks; wi++) {
+      for (let di = 0; di < WEEKLY_SCHEDULE.length; di++) {
+        if (!present.has(`${wi}-${di}`)) rows.push({ memberId, tenantId, weekIndex: wi, dayIndex: di, done: false });
+      }
+    }
+    if (rows.length) await tx.fitnessDayProgress.createMany({ data: rows });
   });
   return ok({ memberId });
 }
